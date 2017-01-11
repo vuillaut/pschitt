@@ -1,5 +1,8 @@
-"""
-ImArray is a software to image an object in the sky by an array of ground Telescopes
+ImArray is a software to image an object in the sky by an array of ground Telescopes.
+
+It has been developed to run simple tests on Cherenkov reconstruction analysis.
+Up to now, the simulated objects are very simples - the most elegant one is an ellipsoid representing an electromagnetic shower.
+
 Copyright (C) 2016  Thomas Vuillaume
 
 This program is free software: you can redistribute it and/or modify
@@ -17,11 +20,3 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 The author may be contacted @
 thomas.vuillaume@lapp.in2p3.fr
-"""
-
-
-
-ImArray is a software to image an object in the sky by an array of ground Telescopes.
-
-It has been developed to run simple tests on Cherenkov reconstruction analysis.
-Up to now, the simulated objects are very simples - the most elegant one is an ellipsoid representing an electromagnetic shower.
