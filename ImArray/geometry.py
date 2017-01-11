@@ -20,11 +20,8 @@ thomas.vuillaume@lapp.in2p3.fr
 """
 
 import numpy as np
-import sympy
-from sympy import Point3D, Plane, Line3D
-from sympy.physics.vector import *
-from math import *
-
+#from math import *
+import math
 
 DEF = -10000
 
@@ -88,6 +85,18 @@ class Telescope:
 
 
 def plane_array(point, normale):
+    """
+    Given a point and a the normale vector of a plane, compute the 4 parameters (a,b,c,d) of the plane equation
+    a*x + b*y + c*z = d
+    Parameters
+    ----------
+    point: 3-floats array
+    normale: 3-floats array
+
+    Returns
+    -------
+    4-floats array
+    """
     d = - (np.array(point)*np.array(normale)).sum()
     return np.append(normale, d)
 
@@ -95,26 +104,38 @@ def plane_array(point, normale):
 def is_point_in_plane(point, plane, eps=1e-6):
     """
     Check if a given point is in a plane
-    :param point: array
-    :param plane: array
-    :param eps: allowed precision
-    :return: boolean
+    Parameters
+    ----------
+    point: 3-floats array
+    plane: 4-floats array giving the plane coefficients of the cartesian equation a*x+b*y+c*z = d
+    eps: float - desired accuracy
+
+    Returns
+    -------
+    Boolean - True if the given point is in the plane, False otherwise
     """
     #if the point is in the plane, it must check the plane equation
-    if(fabs( (point * plane[:3]).sum() + plane[3]) < eps):
+    if(math.fabs( (point * plane[:3]).sum() + plane[3]) < eps):
         return True
     else:
         return False
 
+
 def is_point_in_camera_plane(point, telescope, eps=1e-6):
     """
     Check if a point is the camera plane of the telescope
-    :param point: array
-    :param telescope: class telescope
-    :param eps: float, precision
-    :return: boolean
+    Parameters
+    ----------
+    point: 3-floats array - point to check
+    telescope: telescope class
+    eps: accuracy
+
+    Returns
+    -------
+    Boolean - True if the point is in the camera plane, False otherwise
     """
     return is_point_in_plane(point, camera_plane(telescope))
+
 
 def point_distance(point1, point2):
     """
@@ -123,14 +144,20 @@ def point_distance(point1, point2):
     :param point2: array
     :return: float, distance
     """
-    return sqrt(((np.array(point2)-np.array(point1))**2).sum())
+    return math.sqrt(((np.array(point2)-np.array(point1))**2).sum())
+
 
 def is_point_visible(point, telescope):
     """
-    test if a point is inside the camera radius
-    :param point: array
-    :param telescope: telescope class
-    :return: float
+    Test if a point is inside the camera radius
+    Parameters
+    ----------
+    point: 3-floats array
+    telescope: telescope class
+
+    Returns
+    -------
+    Boolean - True if the point is visible by the camera of the telescope
     """
     if(point_distance(point, camera_center(telescope)) < telescope.camera_size):
         return True
@@ -138,29 +165,18 @@ def is_point_visible(point, telescope):
         return False
 
 
-def altaz_coordinates_changes(alt_angle, az_angle, origine, point):
-    """
-    Change of coordinates from one frame to another
-    :param alt_angle: float, altitude angle
-    :param az_angle: float, azimtuh angle
-    :param origine: 3D point
-    :param point: 3D point
-    :return: 3D point
-    """
-    R = ReferenceFrame('R')
-    N = ReferenceFrame('N')
-    N1 = R.orientnew('N1', 'Axis', [az_angle,R.z])
-    N.orient(N1,'Axis', [alt_angle, R.x])
-    return Point3D(R.dcm(N)*sympy.Matrix(point) + sympy.Matrix(origine), evaluate=False)
-
-
 def site_to_camera_cartesian(point, telescope):
     """
     Given cartesian coordinates of a point in the site frame,
     compute the cartesian coordinates in the camera frame
-    :param point: array
-    :param telescope: telescope class
-    :return: Numpy array
+    Parameters
+    ----------
+    point: 3-floats array
+    telescope: telescope class
+
+    Returns
+    -------
+    Numpy array
     """
     o = point - camera_center(telescope)
     [e1,e2,e3] = camera_base(telescope)
@@ -169,17 +185,19 @@ def site_to_camera_cartesian(point, telescope):
     z = np.vdot(o,e3)
     return np.array([x,y,z])
 
+
 def normale_to_altaz(normale):
     """
     :param normale: array
     :return: tuple of 2 floats : Alt,Az
     """
-    alt = asin(normale[2])
+    alt = math.asin(normale[2])
     if normale[0]==0:
-        az = pi/2
+        az = math.pi/2
     else:
-        az = atan2(normale[1],normale[0])
+        az = math.atan2(normale[1],normale[0])
     return (alt,az)
+
 
 def altaz_to_normal(alt,az):
     """
@@ -187,7 +205,8 @@ def altaz_to_normal(alt,az):
     :param az: float
     :return: array
     """
-    return [cos(alt)*cos(az),cos(alt)*sin(az),sin(alt)]
+    return (math.cos(alt) * math.cos(az), math.cos(alt) * math.sin(az), math.sin(alt))
+
 
 def cartesian_to_altaz(vec):
     """
@@ -197,11 +216,11 @@ def cartesian_to_altaz(vec):
     x = vec[0]
     y = vec[1]
     z = vec[2]
-    rho = sqrt(x**2 + y**2 + z**2)
-    alt = asin(z/rho)
-    az = acos(x/rho)
+    rho = math.sqrt(x**2 + y**2 + z**2)
+    alt = math.asin(z/rho)
+    az = math.acos(x/rho)
     if y<0:
-        az = az - pi
+        az = az - math.pi
     return [rho,alt,az]
 
 
@@ -213,9 +232,9 @@ def altaz_to_cartesian(vec):
     rho = vec[0]
     alt = vec[1]
     az = vec[2]
-    x = rho*cos(alt)*cos(az)
-    y = rho*cos(alt)*sin(az)
-    z = rho*sin(alt)
+    x = rho * math.cos(alt) * math.cos(az)
+    y = rho * math.cos(alt) * math.sin(az)
+    z = rho * math.sin(alt)
     return [x,y,z]
 
 def camera_base(telescope):
@@ -249,15 +268,6 @@ def camera_center(telescope):
     return telescope.center + telescope.normale * telescope.focale
 
 
-def equation_plane(point, normale):
-    """
-    :param point: array
-    :param normale: array
-    :return: SymPy Plane - cartesian equation of a plane
-    """
-    return Plane(Point3D(point, evaluate=False), normal_vector=list(normale), evaluate=False)
-
-
 def plan_focale_image(telescope):
     """
     :param telescope: telescope class
@@ -266,38 +276,42 @@ def plan_focale_image(telescope):
     return equation_plane(telescope.center-telescope.focale*telescope.normale, telescope.normale)
 
 
-def photon_line(point_objet, telescope):
+def matrices_inter(point_line1, point_line2, point_plane, normale_plane):
+    # type: (Numpy array, Numpy array, Numpy array, Numpy array) -> Numpy Arrays (matrices)
     """
-    :param point_objet: SymPy point or array
-    :param telescope: telescope class
-    :return: SymPy line
-    """
-    return Line3D(point_objet, telescope.center)
+    Given two points of a line, a point in a plane and a normal vector of the plane, return the matrices A,B
+    necessary to find the intersection of the line and the plane
+    Parameters
+    ----------
+    point_line1: 3-floats Numpy array - first point of the line
+    point_line2: 3-floats Numpy array - second point of the line
+    point_plane: 3-floats Numpy array - plane point
+    normale_plane: 3-floats Numpy array - plane normale vector in cartesian coordinates
 
-
-def matrices_inter(point_droite1, point_droite2, point_plan, normale_plan):
+    Returns
+    -------
+    Tuple of matrices (A,B)
     """
-    :param point_droite1:
-    :param point_droite2:
-    :param point_plan:
-    :param normale_plan:
-    :return:
-    """
-    D = point_droite2 - point_droite1
-    a = [[0,D[2],-D[1]] , [-D[2],0,D[0]], [normale_plan[0],normale_plan[1],normale_plan[2]]]
-    #a = [[0,-D[2],normale_plan[0]], [D[2],0,normale_plan[1]], [-D[1],D[0],normale_plan[2]]]
-    b = [D[2]*point_droite1[1] - D[1]*point_droite1[2], D[0]*point_droite1[2] - D[2]*point_droite1[0], point_plan[0]*normale_plan[0]+point_plan[1]*normale_plan[1]+point_plan[2]*normale_plan[2]]
-    return a,b
+    D = point_line2 - point_line1
+    a = np.array([[0, D[2], -D[1]] , [-D[2], 0, D[0]], [normale_plane[0], normale_plane[1], normale_plane[2]]])
+    b = np.array([D[2] * point_line1[1] - D[1] * point_line1[2], D[0] * point_line1[2] - D[2] * point_line1[0],
+         point_plane[0] * normale_plane[0] + point_plane[1] * normale_plane[1] + point_plane[2] * normale_plane[2]])
+    return a, b
 
 
 def image_point_pfi(point, telescope):
     """
     Compute the coordinates of the image (in the image focal plane) of a given point
-    :param point: SymPy point or array
-    :param telescope: telescope class
-    :return: SymPy poiny
+    Parameters
+    ----------
+    point: 3-floats array
+    telescope: telescope class
+
+    Returns
+    -------
+    3-floats Numpy array
     """
-    a,b = matrices_inter(np.array(point), telescope.center, telescope.center-telescope.focale*telescope.normale, telescope.normale)
+    a, b = matrices_inter(np.array(point), telescope.center, telescope.center-telescope.focale*telescope.normale, telescope.normale)
     inter = np.linalg.solve(a,b)
     return inter
 
@@ -305,60 +319,12 @@ def image_point_pfi(point, telescope):
 def image_point_pfo(point, telescope):
     """
     Compute the coordinates of the image in the object focal plane) of a given point
-    :param point: SymPy point or array
+    :param point: 3-floats array
     :param telescope: telescope class
-    :return: SymPy poiny
+    :return: 3-floats array
     """
     image_pfi = image_point_pfi(point, telescope)
-    return image_pfi + 2*telescope.focale*telescope.normale
-
-
-def image_vec_pfi(point1, point2, telescope):
-    """
-    :param point1: SymPy point or array
-    :param point2: SymPy point or array
-    :param telescope: telescope class
-    :return: SymPy line
-    """
-    im1 = image_point_pfi(point1, telescope)
-    im2 = image_point_pfi(point2, telescope)
-    return Line3D(im1,im2)
-
-
-def image_vec_pfo(point1, point2, telescope):
-    """
-    :param point1: SymPy point or array
-    :param point2: SymPy point or array
-    :param telescope: telescope class
-    :return: SymPy line
-    """
-    im1 = image_point_pfo(point1, telescope)
-    im2 = image_point_pfo(point2, telescope)
-    return Line3D(im1,im2)
-
-
-def impact_point(shower_top, shower_bot, tel1, tel2):
-    """
-    :param shower_top: SymPy point or array
-    :param shower_bot: SymPy point or array
-    :param tel1: telescope class
-    :param tel2: telescope class
-    :return: SymPy line
-    """
-    line1 = image_vec_pfo(shower_top, shower_bot, tel1)
-    line2 = image_vec_pfo(shower_top, shower_bot, tel2)
-    return line1.intersection(line2)
-
-
-def real_impact_point(shower_top, shower_bot):
-    """
-    compute intersection of shower true direction and plane z=0
-    :param shower_top: SymPy point or array
-    :param shower_bot: SymPy point or array
-    :return: SymPy point
-    """
-    shower_dir = Line3D(shower_top, shower_bot)
-    inter = shower_dir.intersection()
+    return image_pfi + 2.0 * telescope.focale * telescope.normale
 
 
 def load_telescopes(filename, normale = [0,0,1]):
@@ -425,7 +391,7 @@ def rotation_matrix_x(theta):
     :param theta: float, rotation angle
     :return: Numpy matrix
     """
-    return np.matrix([[1,0,0],[0,cos(theta),-sin(theta)],[0,sin(theta),cos(theta)]])
+    return np.matrix([[1,0,0],[0,math.cos(theta),-math.sin(theta)],[0,math.sin(theta),math.cos(theta)]])
 
 
 def rotation_matrix_y(theta):
@@ -434,7 +400,7 @@ def rotation_matrix_y(theta):
     :param theta: float, rotation angle
     :return: Numpy matrix
     """
-    return np.matrix([[cos(theta),0,sin(theta)],[0,1,0],[-sin(theta),0,cos(theta)]])
+    return np.matrix([[math.cos(theta),0,math.sin(theta)],[0,1,0],[-math.sin(theta),0,math.cos(theta)]])
 
 def rotation_matrix_z(theta):
     """
@@ -442,17 +408,17 @@ def rotation_matrix_z(theta):
     :param theta: float, rotation angle
     :return: Numpy matrix
     """
-    return np.matrix([[cos(theta),-sin(theta),0],[sin(theta),cos(theta),0],[0,0,1]])
+    return np.matrix([[math.cos(theta),-math.sin(theta),0],[math.sin(theta),math.cos(theta),0],[0,0,1]])
 
 
 def camera_ex(alt,az):
-    return np.array([-sin(az), cos(az), 0])
+    return np.array([-math.sin(az), math.cos(az), 0])
 
 def camera_ey(alt,az):
-    return np.array([-sin(alt) * cos(az), -sin(alt) * sin(az), cos(alt)])
+    return np.array([-math.sin(alt) * math.cos(az), -math.sin(alt) * math.sin(az), math.cos(alt)])
 
 def camera_ez(alt,az):
-    return np.array([cos(alt) * cos(az), cos(alt) * sin(az), sin(alt)])
+    return np.array([math.cos(alt) * math.cos(az), math.cos(alt) * math.sin(az), math.sin(alt)])
 
 
 def camera_frame_base(alt, az):
@@ -472,15 +438,15 @@ def barycenter_in_R(tel, alt, az, cen_x, cen_y):
 
 def normal_vector_ellipse_plane(psi, alt, az):
     n = [
-    sin(alt) * cos(az) * cos(psi) - sin(az) * sin(psi),
-    sin(alt) * sin(az) * cos(psi) + cos(az) * sin(psi),
-    -cos(alt) * cos(psi)
+    math.sin(alt) * math.cos(az) * math.cos(psi) - math.sin(az) * math.sin(psi),
+    math.sin(alt) * math.sin(az) * math.cos(psi) + math.cos(az) * math.sin(psi),
+    -math.cos(alt) * math.cos(psi)
     ]
     return np.array(n)
 
 
 def normal_vector_ellipse_plane2(psi, alt, az):
-    bb = np.matrix([cos(psi), sin(psi), 0]).T
+    bb = np.matrix([math.cos(psi), math.sin(psi), 0]).T
     camera_base = camera_frame_base(alt, az)
     bb2 = (camera_base * bb).T.getA()[0]
     n = np.cross(bb2,camera_ez(alt,az))
@@ -489,10 +455,11 @@ def normal_vector_ellipse_plane2(psi, alt, az):
 
 def normal_vector_ellipse_plane3(psi, alt, az, barycenter_x, barycenter_y):
     camera_base = camera_frame_base(alt, az)
-    ellipsevec = (camera_base * np.matrix([cos(psi), sin(psi), 0]).T).T.getA()[0]
+    ellipsevec = (camera_base * np.matrix([math.cos(psi), math.sin(psi), 0]).T).T.getA()[0]
     bco = (camera_base * np.matrix([-barycenter_x, -barycenter_y, 1]).T).T.getA()[0]
     n = np.cross(ellipsevec,bco)
     return n
+
 
 def mask_without_cospatial_tels(filename, prec=10):
     A = np.loadtxt(filename)
