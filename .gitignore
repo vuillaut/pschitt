@@ -1,2 +1,8 @@
 .DS_Store
 .idea
+ImArray/.coverage
+ImArray/.ipynb_checkpoints/
+ImArray/__pycache__/
+ImArray/htmlcov/
+ImArray/results/
+ImArray/results/*
