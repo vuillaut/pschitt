@@ -9,8 +9,8 @@ def plot_shower3d(shower,alltel):
     Display the sky object (shower) and the telescope in a 3D representation
     Parameters
     ----------
-    shower : array of points [x,y,z] (array)
-    alltel : array of telescopes (telescope class)
+    shower: array of points (arrays [x,y,z])
+    alltel: array of telescopes (telescope class)
     """
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')

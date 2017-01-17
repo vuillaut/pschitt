@@ -140,9 +140,14 @@ def is_point_in_camera_plane(point, telescope, eps=1e-6):
 def point_distance(point1, point2):
     """
     Compute the distance between two points in space
-    :param point1: array
-    :param point2: array
-    :return: float, distance
+    Parameters
+    ----------
+    point1: cartesian coordinates = 3-floats array
+    point2: cartesian coordinates = 3-floats array
+
+    Returns
+    -------
+    distance between the two points = float
     """
     return math.sqrt(((np.array(point2)-np.array(point1))**2).sum())
 
@@ -188,22 +193,35 @@ def site_to_camera_cartesian(point, telescope):
 
 def normale_to_altaz(normale):
     """
-    :param normale: array
-    :return: tuple of 2 floats : Alt,Az
+    given a vector, return the corresponding (altitude,azimuth) pointing direction
+    Parameters
+    ----------
+    normale: cartesian coordinates of the vector = 3-floats array
+
+    Returns
+    -------
+    altitude, azimuth = angles of the vector pointing direction
     """
     alt = math.asin(normale[2])
     if normale[0]==0:
         az = math.pi/2
     else:
         az = math.atan2(normale[1],normale[0])
-    return (alt,az)
+    return alt, az
 
 
 def altaz_to_normal(alt,az):
     """
-    :param alt: float
-    :param az: float
-    :return: array
+    given a pointing direction angles (altitude, azimuth),
+    return a unit vector pointing in this direction
+    Parameters
+    ----------
+    alt: altitude angle = float
+    az: azimuth angle = float
+
+    Returns
+    -------
+    cartesian coordinates of the unit vector pointing to (alt,az) = 3-floats array
     """
     return (math.cos(alt) * math.cos(az), math.cos(alt) * math.sin(az), math.sin(alt))
 

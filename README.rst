@@ -20,3 +20,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 The author may be contacted @
 thomas.vuillaume@lapp.in2p3.fr
+
+
+
+
+Developments to be done:
+- handle the different camera sizes
