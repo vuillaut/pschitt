@@ -50,12 +50,12 @@ class Telescope:
     Class describing the telescope and its camera
     """
     id = 0
-    def __init__(self, center, normale, camera_type):
+    def __init__(self, center, normal, camera_type):
         Telescope.id += 1
         self.id = Telescope.id
         self.center = np.array(center)
-        #self.normale = np.array(list(sympy.Matrix(normale).normalized().evalf()))
-        self.normale = np.array(normale)/np.linalg.norm(normale)
+        #self.normal = np.array(list(sympy.Matrix(normal).normalized().evalf()))
+        self.normal = np.array(normal)/np.linalg.norm(normal)
         self.camera_type = camera_type
         self.pixpos_filename = "data/PosPixel_{0}.txt".format(camera_type)
         if(camera_type>3):
@@ -70,7 +70,7 @@ class Telescope:
             self.type="lst"
             self.camera_size = LST_RADIUS
             self.focale = LST_FOCALE
-        self.camera_center = self.center + self.normale * self.focale
+        self.camera_center = self.center + self.normal * self.focale
 
     def display_info(self):
         """Just display some info about telescope and camera"""
@@ -79,26 +79,33 @@ class Telescope:
         print("Type ", self.type)
         print("Camera type:", self.camera_type)
         print("Center ", self.center)
-        print("Normale ", self.normale)
+        print("normal ", self.normal)
         print("Focale ", self.focale)
+        print("Pixel position datafile ", self.pixpos_filename)
+
+    def pointing_object(self, point):
+        """
+        set the pointing direction to a point in space
+        """
+        self.normal = np.array(point) - self.camera_center
+        self.normal = self.normal / np.sqrt((self.normal ** 2).sum())
 
 
-
-def plane_array(point, normale):
+def plane_array(point, normal):
     """
-    Given a point and a the normale vector of a plane, compute the 4 parameters (a,b,c,d) of the plane equation
+    Given a point and a the normal vector of a plane, compute the 4 parameters (a,b,c,d) of the plane equation
     a*x + b*y + c*z = d
     Parameters
     ----------
     point: 3-floats array
-    normale: 3-floats array
+    normal: 3-floats array
 
     Returns
     -------
     4-floats array
     """
-    d = - (np.array(point)*np.array(normale)).sum()
-    return np.append(normale, d)
+    d = - (np.array(point)*np.array(normal)).sum()
+    return np.append(normal, d)
 
 
 def is_point_in_plane(point, plane, eps=1e-6):
@@ -152,6 +159,20 @@ def point_distance(point1, point2):
     return math.sqrt(((np.array(point2)-np.array(point1))**2).sum())
 
 
+def vector_norm(vector):
+    """
+    Compute the norm of a vector
+    Parameters
+    ----------
+    vector: 3-floats array
+
+    Returns
+    -------
+    float: norm of the vector
+    """
+    return np.linalg.norm(vector)
+
+
 def is_point_visible(point, telescope):
     """
     Test if a point is inside the camera radius
@@ -191,22 +212,22 @@ def site_to_camera_cartesian(point, telescope):
     return np.array([x,y,z])
 
 
-def normale_to_altaz(normale):
+def normal_to_altaz(normal):
     """
     given a vector, return the corresponding (altitude,azimuth) pointing direction
     Parameters
     ----------
-    normale: cartesian coordinates of the vector = 3-floats array
+    normal: cartesian coordinates of the vector = 3-floats array
 
     Returns
     -------
     altitude, azimuth = angles of the vector pointing direction
     """
-    alt = math.asin(normale[2])
-    if normale[0]==0:
+    alt = math.asin(normal[2])
+    if normal[0]==0:
         az = math.pi/2
     else:
-        az = math.atan2(normale[1],normale[0])
+        az = math.atan2(normal[1],normal[0])
     return alt, az
 
 
@@ -260,13 +281,13 @@ def camera_base(telescope):
     :param telescope: telescope class
     :return: array
     """
-    if not(np.array_equal(telescope.normale,[0,0,1])):
-        e2 = np.cross([0,0,1],telescope.normale)
-        e1 = np.cross(e2,telescope.normale)
+    if not(np.array_equal(telescope.normal,[0,0,1])):
+        e2 = np.cross([0,0,1],telescope.normal)
+        e1 = np.cross(e2,telescope.normal)
     else:
         e1 = [1,0,0]
         e2 = [0,1,0]
-    e3 = list(telescope.normale)
+    e3 = list(telescope.normal)
     return [e1/np.linalg.norm(e1),e2/np.linalg.norm(e2),e3/np.linalg.norm(e3)]
 
 
@@ -275,7 +296,7 @@ def camera_plane(telescope):
     :param telescope: telescope class
     :return: plane array
     """
-    return plane_array(camera_center(telescope), telescope.normale)
+    return plane_array(camera_center(telescope), telescope.normal)
 
 
 def camera_center(telescope):
@@ -283,7 +304,7 @@ def camera_center(telescope):
     :param telescope: telescope class
     :return: array - position of the camera center in the site frame
     """
-    return telescope.center + telescope.normale * telescope.focale
+    return telescope.center + telescope.normal * telescope.focale
 
 
 def plan_focale_image(telescope):
@@ -291,10 +312,10 @@ def plan_focale_image(telescope):
     :param telescope: telescope class
     :return: SymPy plane
     """
-    return equation_plane(telescope.center-telescope.focale*telescope.normale, telescope.normale)
+    return equation_plane(telescope.center-telescope.focale*telescope.normal, telescope.normal)
 
 
-def matrices_inter(point_line1, point_line2, point_plane, normale_plane):
+def matrices_inter(point_line1, point_line2, point_plane, normal_plane):
     # type: (Numpy array, Numpy array, Numpy array, Numpy array) -> Numpy Arrays (matrices)
     """
     Given two points of a line, a point in a plane and a normal vector of the plane, return the matrices A,B
@@ -304,16 +325,16 @@ def matrices_inter(point_line1, point_line2, point_plane, normale_plane):
     point_line1: 3-floats Numpy array - first point of the line
     point_line2: 3-floats Numpy array - second point of the line
     point_plane: 3-floats Numpy array - plane point
-    normale_plane: 3-floats Numpy array - plane normale vector in cartesian coordinates
+    normal_plane: 3-floats Numpy array - plane normal vector in cartesian coordinates
 
     Returns
     -------
     Tuple of matrices (A,B)
     """
     D = point_line2 - point_line1
-    a = np.array([[0, D[2], -D[1]] , [-D[2], 0, D[0]], [normale_plane[0], normale_plane[1], normale_plane[2]]])
+    a = np.array([[0, D[2], -D[1]] , [-D[2], 0, D[0]], [normal_plane[0], normal_plane[1], normal_plane[2]]])
     b = np.array([D[2] * point_line1[1] - D[1] * point_line1[2], D[0] * point_line1[2] - D[2] * point_line1[0],
-         point_plane[0] * normale_plane[0] + point_plane[1] * normale_plane[1] + point_plane[2] * normale_plane[2]])
+         point_plane[0] * normal_plane[0] + point_plane[1] * normal_plane[1] + point_plane[2] * normal_plane[2]])
     return a, b
 
 
@@ -329,7 +350,7 @@ def image_point_pfi(point, telescope):
     -------
     3-floats Numpy array
     """
-    a, b = matrices_inter(np.array(point), telescope.center, telescope.center-telescope.focale*telescope.normale, telescope.normale)
+    a, b = matrices_inter(np.array(point), telescope.center, telescope.center-telescope.focale*telescope.normal, telescope.normal)
     inter = np.linalg.solve(a,b)
     return inter
 
@@ -342,14 +363,14 @@ def image_point_pfo(point, telescope):
     :return: 3-floats array
     """
     image_pfi = image_point_pfi(point, telescope)
-    return image_pfi + 2.0 * telescope.focale * telescope.normale
+    return image_pfi + 2.0 * telescope.focale * telescope.normal
 
 
-def load_telescopes(filename, normale = [0,0,1]):
+def load_telescopes(filename, normal = [0,0,1]):
     """
     Load telescopes positions and pointing direction from data file
     :param filename: string - name of the data file
-    :param normale: array - pointing direction
+    :param normal: array - pointing direction
     :return: list of telescope classes
     """
     tels = []
@@ -358,18 +379,23 @@ def load_telescopes(filename, normale = [0,0,1]):
     for line in read_data:
         if not line[0]=='#':
             t = line.split()
-            tel = Telescope([float(t[1]),float(t[2]),float(t[3])],normale,int(t[0]))
+            tel = Telescope([float(t[1]),float(t[2]),float(t[3])],normal,int(t[0]))
             tels.append(tel)
     print(len(tels), " telescopes loaded")
     return tels
 
 
-def load_telescopes_flatfloor(filename, normale = [0,0,1]):
+def load_telescopes_flatfloor(filename, normal = [0,0,1]):
     """
     Load telescopes positions and pointing direction from data file. All the telescopes have the same altitude z=0
-    :param filename: string - data file
-    :param normale: array - pointing direction
-    :return: list of telescope classes
+    Parameters
+    ----------
+    filename: string - datafile name with list of positions for the telescopes
+    normal: pointing direction as a normal (to the camera plane) vector
+
+    Returns
+    -------
+    list of telescope classes
     """
     tels = []
     with open(filename, 'r') as f:
@@ -382,7 +408,7 @@ def load_telescopes_flatfloor(filename, normale = [0,0,1]):
             teltype = "mst"
         elif(float(t[2])==SST_FOCALE):
             teltype = "sst"
-        tel = Telescope([float(t[0]),float(t[1]),0],normale,teltype)
+        tel = Telescope([float(t[0]),float(t[1]),0],normal,teltype)
         #for tel1 in tels:
         #    if not ((tel1.center==tel.center).all() and tel1.id==tel.id):
         tels.append(tel)
@@ -480,6 +506,14 @@ def normal_vector_ellipse_plane3(psi, alt, az, barycenter_x, barycenter_y):
 
 
 def mask_without_cospatial_tels(filename, prec=10):
+    """
+    From a datafile with a list of telescopes positions, compute a mask with only non-cospatial telescopes
+    save the result in a newfile  "data/UniquePositionTelescope.txt"
+    Parameters
+    ----------
+    filename: datafile with list of positions
+    prec: accuracy for the non-cospatiality
+    """
     A = np.loadtxt(filename)
     B = [A[0]]
     C = [A[0][3]-1]
@@ -495,3 +529,127 @@ def mask_without_cospatial_tels(filename, prec=10):
     np.savetxt("data/UniquePositionTelescope.txt",B,fmt='%3.3f',delimiter='\t')
     np.savetxt("data/MaskUnique.txt",C,fmt='%d')
     print("Number of unique telescopes : ", len(C))
+
+
+def pointing_object(tel, Point):
+    """
+    Compute the direction (camera's normal) for a telescope to point to a given point in space
+    Parameters
+    ----------
+    tel: telescope class
+    Point: 3-float Numpy array
+
+    Returns
+    -------
+    the direction as a normal vector = 3-floats numpy array
+    """
+    tel.normal = np.array(Point)-tel.camera_center
+    tel.normal = tel.normal / np.sqrt((tel.normal**2).sum())
+    return tel.normal
+
+
+def pointing_object_array(alltel, Point):
+    """
+    Compute the direction (camera's normal) for each telescope of the array to point to a given point in space
+    The new direction is set for each telescope class
+    Parameters
+    ----------
+    alltel: list of telescopes class
+    Point: 3-floats array
+    """
+    for tel in alltel:
+        pointing_object(tel, Point)
+
+
+def divergent_pointing_array(alltel, point):
+    """
+        Compute the direction (camera's normal) for each telescope of the array to point to a given point in space in a divergent manner
+        (you probably want to point to something in the ground here)
+
+    Parameters
+    ----------
+    alltel: list of telescope classes
+    point: point = 3-floats array
+    """
+    pointing_object_array(alltel, point)
+    for tel in alltel:
+        tel.normal = -tel.normal
+
+
+def telescopes_unicity(tel_list):
+    """
+    Check if all the telescopes in a list are unique
+    Parameters
+    ----------
+    tel_list: list of telescopes classes
+
+    Returns
+    -------
+    Boolean: True if all telescopes in the list are unique
+    """
+    bool = True
+    for tel1 in tel_list:
+        for tel2 in tel_list:
+            if ((tel1.center == tel2.center).all() and tel1.id != tel2.id):
+                print("Telescopes {0} and {1} are both at the same position {3}".format(tel1.id, tel2.id, tel1.center))
+                bool = False
+    return bool
+
+
+def particle_cone_angle(particle_energy):
+    """
+    Compute the particle cone angle as a function of its energy
+    Parameters
+    ----------
+    particle_position: 3-floats array
+    particle_energy: float in eV
+
+    Returns
+    -------
+    float: angle in radian
+    """
+    # 0.4 rad = 23 deg
+    return 0.4
+
+
+def particle_transmission_coefficient(particle_energy, particle_altitude):
+    """
+
+    Parameters
+    ----------
+    particle_energy: float Particle energy in eV
+
+    Returns
+    -------
+    float: transmission coefficient
+    """
+    return 1
+
+
+def is_particle_visible(particle_position, particle_direction, particle_energy, telescope):
+    """
+    Determine if a particle is visible by a telescope.
+
+    Parameters
+    ----------
+    particle_position: 3-floats array - particle position
+    particle_direction: 3-floats array - direction vector of the particle
+    particle_energy: float
+    telescope: telescope class
+
+    Returns
+    -------
+    boolean: True if the particle is visible by the telescope
+    """
+
+    # vector particle-telescope:
+    PT = telescope.camera_center - np.array(particle_position)
+    PT = PT/np.linalg.norm(PT)
+
+    # angle between particle direction and PT
+    theta_pt = np.arcos(np.dot(particle_direction, PT)/np.linalg.norm(particle_direction))
+
+    #particle emission transmission
+    Tau = particle_transmission_coefficient(particle_energy, particle_position[2])
+
+    return theta_pt < particle_cone_angle(particle_energy) & np.random.rand() < Tau
