@@ -244,7 +244,7 @@ def altaz_to_normal(alt,az):
     -------
     cartesian coordinates of the unit vector pointing to (alt,az) = 3-floats array
     """
-    return (math.cos(alt) * math.cos(az), math.cos(alt) * math.sin(az), math.sin(alt))
+    return np.array([math.cos(alt) * math.cos(az), math.cos(alt) * math.sin(az), math.sin(alt)])
 
 
 def cartesian_to_altaz(vec):
@@ -596,7 +596,7 @@ def telescopes_unicity(tel_list):
     return bool
 
 
-def particle_cone_angle(particle_energy):
+def particle_cone_angle(particle_beta=1, air_index=1):
     """
     Compute the particle cone angle as a function of its energy
     Parameters
@@ -608,8 +608,9 @@ def particle_cone_angle(particle_energy):
     -------
     float: angle in radian
     """
-    # 0.4 rad = 23 deg
-    return 0.4
+    # 0.018 rad ~ 1 deg
+    # theta = 1/beta*neta ?
+    return 0.018
 
 
 def particle_transmission_coefficient(particle_energy, particle_altitude):
@@ -647,9 +648,29 @@ def is_particle_visible(particle_position, particle_direction, particle_energy, 
     PT = PT/np.linalg.norm(PT)
 
     # angle between particle direction and PT
-    theta_pt = np.arcos(np.dot(particle_direction, PT)/np.linalg.norm(particle_direction))
+    theta_pt = np.arccos(np.dot(particle_direction, PT)/np.linalg.norm(particle_direction))
 
     #particle emission transmission
     Tau = particle_transmission_coefficient(particle_energy, particle_position[2])
 
-    return theta_pt < particle_cone_angle(particle_energy) & np.random.rand() < Tau
+    return (theta_pt < particle_cone_angle(particle_energy)) & (np.random.rand() < Tau)
+
+
+def cherenkov_ground_ellipse_parameters(particle_position, particle_direction, cherenkov_cone_angle):
+    """
+    compute the parameters of the ellipse created by the illumination of the ground by a cherenkov shower
+    the ground is supposed to be given by z=0
+
+    Parameters
+    ----------
+    particle_position: 3-floats array
+    particle_direction: 3-floats array - direction vector
+    cherenkov_cone_angle: float, angle in rad
+
+    Returns
+    -------
+
+    """
+
+    #center of the ellipse (= impact point)
+    #x0 = (2. * ) / ()

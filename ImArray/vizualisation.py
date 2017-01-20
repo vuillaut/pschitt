@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import mpl_toolkits.mplot3d.art3d as art3d
-
+from mpl_toolkits.mplot3d import Axes3D
 
 
 def plot_shower3d(shower,alltel):
@@ -18,7 +18,7 @@ def plot_shower3d(shower,alltel):
     for tel in alltel:
         p = plt.Circle((tel.center[0],tel.center[1]), 30)
         ax.add_patch(p)
-        art3d.pathpatch_2d_to_3d(p, z=tel.center[2], zdir="z")
+        art3d.pathpatch_2d_to_3d(p, z=tel.center[2], zdir='z')
     plt.axis([-1000, 1000, -1000, 1000])
     plt.show()
 
@@ -74,3 +74,11 @@ def display_pointing_array(alltel):
     plt.axis('equal')
     plt.axis([xmin,xmax,ymin,ymax])
     plt.show()
+
+
+def plot_cherenkov_cone():
+    """
+    plot a 3d cherenkov cone given a direction
+    Returns
+    -------
+    """
