@@ -39,30 +39,26 @@ noise = 0
 '''
 Shower parameters
 '''
-impact_point = np.array([0, 250, 0])
+impact_point = np.array([0,250,0])
 
-# shower direction
+#shower direction
 salt = math.radians(74)
 saz = math.radians(0)
 
-# pointing direction
+#pointing direction
 talt = math.radians(74)
 taz = math.radians(0)
 
-# shower parameters
-s_top = [0, 0, 15000]
-s_bot = [0, 0, 1000]
-s_center = [0, 0, 8000]
-stop = 15000
-slength = 12000
-swidth = 200
+#shower parameters
+shower_top = 15000
+shower_length = 12000
+shower_width = 200
 
+npoints = 5000
 
-npoints = 10000
+#shower = obj.random_ellipsoide(shower_top, shower_length, shower_width, salt, saz, impact_point, npoints)
+shower = obj.linear_segment([0,1000,15000], [0,0,2000], npoints)
 
-
-shower = obj.linear_segment([0,1000,15000], s_bot, npoints)
-#shower = obj.random_ellipsoide(stop, slength, swidth, salt, saz, impact_point, npoints)
 
 print(shower)
 
@@ -88,10 +84,10 @@ alltel = [tel7, tel8, tel9, tel10]
 # alltel = geo.load_telescopes_flatfloor("data/tel_pos.dat", tel_normal)
 
 
-for tel1 in alltel:
-    for tel2 in alltel:
-        if ((tel1.center == tel2.center).all() and tel1.id != tel2.id):
-            print(tel1.id, tel2.id, tel1.center, tel2.center)
+# for tel1 in alltel:
+#     for tel2 in alltel:
+#         if ((tel1.center == tel2.center).all() and tel1.id != tel2.id):
+#             print(tel1.id, tel2.id, tel1.center, tel2.center)
 
 if BoolPlot:
     viz.plot_shower3d(shower, alltel)
@@ -105,11 +101,12 @@ f = open('results/teldata.xml', 'w')
 f.write("\n")
 f.write("<subarray>\n")
 
-allhist = np.zeros(1855)  ### SIZE SHOULD CHANGE WITH CAMERA TYPE ###
 IM = []
-coord = []
-vis = []
+visible_points = []
 HillasParameters = []
+noise = 1
+allhist = np.zeros(1855) ###THIS NEEDS TO BE CHANGED
+
 triggered_telescopes = []
 trigger_intensity = 0.
 
@@ -118,43 +115,36 @@ for tel in alltel:
     Y = []
     for point in shower:
         im = geo.image_point_pfo(point, tel)
-        #IM.append(im)
+        IM.append(im)
         center_camera = geo.camera_center(tel)
-        #if geo.is_point_in_camera_plane(im, tel):
-        #    vis.append(geo.is_point_visible(im, tel))
+        if geo.is_point_in_camera_plane(im, tel):
+            visible_points.append(geo.is_point_visible(im, tel))
         im_cam = geo.site_to_camera_cartesian([im[0], im[1], im[2]], tel)
         X.append(im_cam[0])
         Y.append(im_cam[1])
-    # hist = ci.camera_image(tel, np.column_stack((X,Y)), filename="results/{}.txt".format(tel.id))
+    # the camera histogram corresponds to the image : a list of pixels positions + signal
     hist = ci.camera_image(tel, np.column_stack((X, Y)), "results/{}.txt".format(tel.id), noise)
-    # print(hist)
-    alt, az = geo.normal_to_altaz(tel.normal)
-    # Compute the Hillas parameters for each image:
-    if hist[:,2].sum() > trigger_intensity:
-        triggered_telescopes.append(tel)
-        hp = hillas.hillas_parameters_2(hist[:, 0], hist[:, 1], hist[:, 2])
-        hp.append(tel.id)
-        HillasParameters.append(hp)
-        allhist += hist[:, 2]
+    hp = hillas.hillas_parameters_2(hist[:, 0], hist[:, 1], hist[:, 2])
+    hp.append(tel.id)
 
+    HillasParameters.append(hp)
+    allhist += hist[:, 2]
 
-        # save the images:
-        f.write('<telescope telId="%d" position="%f,%f,%f" dirAlt="%f" dirAz="%f" focal="%f">\n' % (
-        tel.id, tel.center[0], tel.center[1], tel.center[2], alt, az, tel.focale))
-        for xyph in hist:
-            f.write('%f,%f,%f;\n' % (xyph[0], xyph[1], xyph[2]))
-        f.write('</telescope>\n')
-
-
-        if BoolPlot:
-            plt.plot(X, Y, 'o', label=tel.center, markersize=3)
+    # for each telescope, we can plot the camera image:
+    if  BoolPlot:
+        plt.plot(X, Y, 'o', label=tel.center, markersize=3)
 
 
 print(triggered_telescopes)
+if BoolPlot:
+    plt.legend(loc='upper center', fancybox=True, ncol=3, bbox_to_anchor=(0.5, 1.1))
+    plt.show()
+
 
 # Hillas geometrical reconstruction:
-pa = hillas.impact_parameter_average(triggered_telescopes, HillasParameters, alt, az)
-p = hillas.impact_parameter_ponderated(triggered_telescopes, HillasParameters, alt, az)
+pa = hillas.impact_parameter_average(alltel, HillasParameters, talt, taz)
+p = hillas.impact_parameter_ponderated(alltel, HillasParameters, talt, taz)
+
 
 print("Real impact parameter : ", impact_point)
 print("Reco with simple average = %s \tError = %.2fm" % (pa, math.sqrt(((impact_point - pa) ** 2).sum())))
