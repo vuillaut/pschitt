@@ -130,7 +130,7 @@ for tel in alltel:
     HillasParameters.append(hp)
 
     allhist += hist[:, 2]
-    alt, az = geo.normale_to_altaz(tel.normale)
+    alt, az = geo.normal_to_altaz(tel.normal)
 
     # save the images:
     f.write('<telescope telId="%d" position="%f,%f,%f" dirAlt="%f" dirAz="%f" focal="%f">\n' % (
