@@ -34,12 +34,13 @@ def linear_segment(shower_top, shower_bot, n):
     :param n: number of points
     :return: array of point arrays
     """
-    vec = np.array(shower_top)-np.array(shower_bot)
+    top = np.array(shower_top)
+    vec = top - np.array(shower_bot)
     l = np.linspace(0,1,n)
-    x = []
+    shower = []
     for i in l:
-        x.append(np.array(shower_top) - vec * i)
-    return x
+        shower.append(top - vec * i)
+    return np.array(shower)
 
 
 def random_surface_sphere(shower_center, shower_radius, n):
