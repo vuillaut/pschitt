@@ -56,10 +56,12 @@ def find_closest_pixel(pos, pixel_tab):
     X = np.array(pixel_tab[:,0])
     Y = np.array(pixel_tab[:,1])
     d = (X-pos[0])**2 + (Y-pos[1])**2
-    if d.min() < ((pixel_tab[1:,0]-pixel_tab[0,0])**2 + (pixel_tab[1:,1]-pixel_tab[0,1])**2).min():
-        return d.argmin()
-    else:
-        return None
+    #Check if minimal distance is lower than pixel size. If not the point is outside the camera
+    # if d.min() < ((pixel_tab[1:,0]-pixel_tab[0,0])**2 + (pixel_tab[1:,1]-pixel_tab[0,1])**2).min():
+    #     return d.argmin()
+    # else:
+    #     return None
+    return  d.argmin()
 
 
 def photon_count(photon_pos_tab, pixel_tab):
@@ -98,6 +100,17 @@ def shower_image_in_camera(telescope, photon_pos_tab, pixel_pos_filename):
     return pix_hist
 
 
+def shower_image_in_camera_2(telescope, photon_pos_tab):
+    """
+    :param telescope: telescope class
+    :param photon_pos_tab: array
+    :param pixel_pos_filename: string
+    :return: array - pixel histogram
+    """
+    pix_hist = photon_count(photon_pos_tab, telescope.pixel_tab)
+    return pix_hist
+
+
 def add_noise_poisson(pix_hist, lam=100):
     """
     Add Poisson noise to the image
@@ -120,9 +133,9 @@ def camera_image(telescope, photon_pos_tab, result_filename="data/camera_image.t
     :param lam: Poisson law lambda parameter to compute noise
     :return: pixel histogram
     """
-    pix_hist = shower_image_in_camera(telescope, photon_pos_tab, telescope.pixpos_filename)
+    pix_hist = shower_image_in_camera_2(telescope, photon_pos_tab)
     pix_hist = add_noise_poisson(pix_hist, lam)
-    write_camera_image(pix_hist, result_filename)
+    #write_camera_image(pix_hist, result_filename)
     return pix_hist
 
 

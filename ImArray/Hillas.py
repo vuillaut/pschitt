@@ -46,6 +46,24 @@ See also
 MomentParameters, hillas_parameters, hillas_parameters_2
 """
 
+class HillasParameters():
+    """
+    Class to handle Hillas parameters
+    """
+    def __init__(self):
+        phi = 0.
+        intensity = 0.
+        width = 0.
+        length =0.
+        gx = 0.
+        gy = 0.
+
+
+    def plot_ellipse(self):
+        """
+        To write: plot the ellipse in the camera
+        """
+
 
 def hillas_parameters_1(pix_x, pix_y, image):
     """Compute Hillas parameters for a given shower image.
@@ -64,6 +82,7 @@ def hillas_parameters_1(pix_x, pix_y, image):
     -------
     hillas_parameters : `MomentParameters`
     """
+
     pix_x = Quantity(np.asanyarray(pix_x, dtype=np.float64)).value
     pix_y = Quantity(np.asanyarray(pix_y, dtype=np.float64)).value
     image = np.asanyarray(image, dtype=np.float64)
@@ -129,6 +148,9 @@ def hillas_parameters_2(pix_x, pix_y, image):
     -------
     hillas_parameters : `MomentParameters`
     """
+
+    assert image.sum() > 0
+
     #unit = pix_x.unit
     unit = 1.
 
@@ -230,6 +252,7 @@ def reco_impact_parameter(hillas_parameters_1, alt1, az1, tel1, hillas_parameter
     return X
 
 
+
 def impact_parameter_average(alltel, HillasParameters, alt, az):
     P = []
     for i in np.arange(len(alltel)):
@@ -241,6 +264,7 @@ def impact_parameter_average(alltel, HillasParameters, alt, az):
                 P.append(p)
     P = np.array(P)
     return [P[:,0].mean(), P[:,1].mean(), P[:,2].mean()]
+
 
 
 def coef_hillas_ponderation(hillas_parameters_1, hillas_parameters_2):

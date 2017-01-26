@@ -34,7 +34,7 @@ import vizualisation as viz
 MEAN = np.empty(0)
 
 # If you want some plots to be done
-BoolPlot = True
+BoolPlot = False
 noise = 0
 
 '''
@@ -58,7 +58,7 @@ stop = 15000
 slength = 12000
 swidth = 200
 
-npoints = 500
+npoints = 10000
 
 # shower = obj.linear_segment(s_top, s_bot, npoints)
 shower = obj.random_ellipsoide(stop, slength, swidth, salt, saz, impact_point, npoints)
@@ -130,7 +130,7 @@ for tel in alltel:
     HillasParameters.append(hp)
 
     allhist += hist[:, 2]
-    alt, az = geo.normale_to_altaz(tel.normale)
+    alt, az = geo.normal_to_altaz(tel.normal)
 
     # save the images:
     f.write('<telescope telId="%d" position="%f,%f,%f" dirAlt="%f" dirAz="%f" focal="%f">\n' % (

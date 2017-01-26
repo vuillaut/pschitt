@@ -22,6 +22,7 @@ thomas.vuillaume@lapp.in2p3.fr
 import numpy as np
 #from math import *
 import math
+import CameraImage as ci
 
 DEF = -10000
 
@@ -58,6 +59,7 @@ class Telescope:
         self.normal = np.array(normal)/np.linalg.norm(normal)
         self.camera_type = camera_type
         self.pixpos_filename = "data/PosPixel_{0}.txt".format(camera_type)
+        self.pixel_tab = ci.read_pixel_pos(self.pixpos_filename)
         if(camera_type>3):
             self.type="sst"
             self.camera_size = SST_RADIUS
@@ -71,6 +73,7 @@ class Telescope:
             self.camera_size = LST_RADIUS
             self.focale = LST_FOCALE
         self.camera_center = self.center + self.normal * self.focale
+        self.camera_size = math.sqrt((self.pixel_tab[0]**2 +self.pixel_tab[1]**2).max())
 
     def display_info(self):
         """Just display some info about telescope and camera"""
@@ -206,9 +209,12 @@ def site_to_camera_cartesian(point, telescope):
     """
     o = point - camera_center(telescope)
     [e1,e2,e3] = camera_base(telescope)
-    x = np.vdot(o,e1)
-    y = np.vdot(o,e2)
-    z = np.vdot(o,e3)
+    # x = np.dot(o,e1)
+    # y = np.dot(o,e2)
+    # z = np.dot(o,e3)
+    x = my_3d_dot(o, e1)
+    y = my_3d_dot(o, e2)
+    z = my_3d_dot(o, e3)
     return np.array([x,y,z])
 
 
@@ -281,14 +287,36 @@ def camera_base(telescope):
     :param telescope: telescope class
     :return: array
     """
-    if not(np.array_equal(telescope.normal,[0,0,1])):
-        e2 = np.cross([0,0,1],telescope.normal)
-        e1 = np.cross(e2,telescope.normal)
-    else:
-        e1 = [1,0,0]
-        e2 = [0,1,0]
+    # if not(np.array_equal(telescope.normal,[0,0,1])):
+    #     e2 = np.cross([0,0,1],telescope.normal)
+    #     e1 = np.cross(e2,telescope.normal)
+    # else:
+    #     e1 = [1,0,0]
+    #     e2 = [0,1,0]
+    #e2 = np.cross([0,0,1],telescope.normal)
+    #e1 = np.cross(e2,telescope.normal)
+    e2 = my_3d_cross([0,0,1],telescope.normal)
+    e1 = my_3d_cross(e2,telescope.normal)
     e3 = list(telescope.normal)
-    return [e1/np.linalg.norm(e1),e2/np.linalg.norm(e2),e3/np.linalg.norm(e3)]
+    #return [e1/np.linalg.norm(e1),e2/np.linalg.norm(e2),e3/np.linalg.norm(e3)]
+    return [my_normed_vec(e1),my_normed_vec(e2),my_normed_vec(e3)]
+
+
+def my_3d_cross(vec1, vec2):
+    x = vec1[1] * vec2[2] - vec1[2] * vec2[1]
+    y = vec1[2] * vec2[0] - vec1[0] * vec2[2]
+    z = vec1[0] * vec2[1] - vec1[1] * vec2[0]
+    return [x,y,z]
+
+def my_3d_norm(vec):
+    return math.sqrt(vec[0]*vec[0] + vec[1]*vec[1] + vec[2]*vec[2])
+
+def my_normed_vec(vec):
+    norm = my_3d_norm(vec)
+    return [vec[0]/norm, vec[1]/norm, vec[2]/norm]
+
+def my_3d_dot(vec1, vec2):
+    return vec1[0]*vec2[0] + vec1[1]*vec2[1] + vec1[2]*vec2[2]
 
 
 def camera_plane(telescope):
@@ -354,6 +382,22 @@ def image_point_pfi(point, telescope):
     inter = np.linalg.solve(a,b)
     return inter
 
+def image_point_pfi_2(point, telescope):
+    """
+    Faster way to compute the coordinates of the image (in the image focal plane) of a given point
+    Parameters
+    ----------
+    point: 3-floats array
+    telescope: telescope class
+
+    Returns
+    -------
+    3-floats Numpy array
+    """
+    e = (telescope.center - point) / np.linalg.norm(telescope.center - point)
+    I = telescope.center + telescope.focale/(np.dot(telescope.normal, -e)) * e
+    return I
+
 
 def image_point_pfo(point, telescope):
     """
@@ -362,7 +406,7 @@ def image_point_pfo(point, telescope):
     :param telescope: telescope class
     :return: 3-floats array
     """
-    image_pfi = image_point_pfi(point, telescope)
+    image_pfi = image_point_pfi_2(point, telescope)
     return image_pfi + 2.0 * telescope.focale * telescope.normal
 
 

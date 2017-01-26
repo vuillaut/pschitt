@@ -20,6 +20,7 @@ def plot_shower3d(shower,alltel):
         ax.add_patch(p)
         art3d.pathpatch_2d_to_3d(p, z=tel.center[2], zdir='z')
     plt.axis([-1000, 1000, -1000, 1000])
+    #plt.axis('equal')
     plt.show()
 
 
