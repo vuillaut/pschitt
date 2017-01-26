@@ -54,7 +54,7 @@ shower_top = 15000
 shower_length = 12000
 shower_width = 200
 
-npoints = 500
+npoints = 5000
 
 #shower = obj.random_ellipsoide(shower_top, shower_length, shower_width, salt, saz, impact_point, npoints)
 shower = obj.linear_segment([0,1000,15000], [0,0,2000], npoints)

@@ -22,7 +22,6 @@ thomas.vuillaume@lapp.in2p3.fr
 import geometry as geo
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.patches import Circle, PathPatch
 import time
 import math
 import object as obj
@@ -58,10 +57,12 @@ stop = 15000
 slength = 12000
 swidth = 200
 
-npoints = 5000
+npoints = 10
 
-shower = obj.linear_segment(s_top, s_bot, npoints)
+shower = obj.linear_segment([0,1000,15000], s_bot, npoints)
 #shower = obj.random_ellipsoide(stop, slength, swidth, salt, saz, impact_point, npoints)
+
+print(shower)
 
 '''
 Load a telescope configuration
@@ -80,7 +81,7 @@ tel8 = geo.Telescope([-80, 0, 0], tel_normal, 0)
 tel9 = geo.Telescope([0, -80, 0], tel_normal, 0)
 tel10 = geo.Telescope([0, 80, 0], tel_normal, 0)
 
-alltel = [tel1, tel2, tel3, tel4, tel5, tel6]
+alltel = [tel7, tel8, tel9, tel10]
 # alltel = geo.load_telescopes("data/tel_pos.dat")
 # alltel = geo.load_telescopes_flatfloor("data/tel_pos.dat", tel_normal)
 
@@ -115,17 +116,17 @@ for tel in alltel:
     Y = []
     for point in shower:
         im = geo.image_point_pfo(point, tel)
-        IM.append(im)
+        #IM.append(im)
         center_camera = geo.camera_center(tel)
-        if geo.is_point_in_camera_plane(im, tel):
-            vis.append(geo.is_point_visible(im, tel))
+        #if geo.is_point_in_camera_plane(im, tel):
+        #    vis.append(geo.is_point_visible(im, tel))
         im_cam = geo.site_to_camera_cartesian([im[0], im[1], im[2]], tel)
         X.append(im_cam[0])
         Y.append(im_cam[1])
     # hist = ci.camera_image(tel, np.column_stack((X,Y)), filename="results/{}.txt".format(tel.id))
     hist = ci.camera_image(tel, np.column_stack((X, Y)), "results/{}.txt".format(tel.id), noise)
     # print(hist)
-
+    alt, az = geo.normal_to_altaz(tel.normal)
     # Compute the Hillas parameters for each image:
     if hist[:,2].sum() > trigger_intensity:
         triggered_telescopes.append(tel)
@@ -134,7 +135,6 @@ for tel in alltel:
         HillasParameters.append(hp)
         allhist += hist[:, 2]
 
-        alt, az = geo.normal_to_altaz(tel.normal)
 
         # save the images:
         f.write('<telescope telId="%d" position="%f,%f,%f" dirAlt="%f" dirAz="%f" focal="%f">\n' % (
@@ -145,6 +145,9 @@ for tel in alltel:
 
         if BoolPlot:
             plt.plot(X, Y, 'o', label=tel.center, markersize=3)
+
+
+print(triggered_telescopes)
 
 # Hillas geometrical reconstruction:
 pa = hillas.impact_parameter_average(triggered_telescopes, HillasParameters, alt, az)

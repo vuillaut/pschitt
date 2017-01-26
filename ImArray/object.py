@@ -26,6 +26,7 @@ import matplotlib.pyplot as plt
 import geometry as geo
 
 
+
 def linear_segment(shower_top, shower_bot, n):
     """
     Homogeneous repartition of points following a linear segment
