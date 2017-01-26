@@ -34,7 +34,7 @@ import vizualisation as viz
 MEAN = np.empty(0)
 
 # If you want some plots to be done
-BoolPlot = True
+BoolPlot = False
 noise = 0
 
 '''
@@ -58,10 +58,10 @@ stop = 15000
 slength = 12000
 swidth = 200
 
-npoints = 500
+npoints = 5000
 
-# shower = obj.linear_segment(s_top, s_bot, npoints)
-shower = obj.random_ellipsoide(stop, slength, swidth, salt, saz, impact_point, npoints)
+shower = obj.linear_segment(s_top, s_bot, npoints)
+#shower = obj.random_ellipsoide(stop, slength, swidth, salt, saz, impact_point, npoints)
 
 '''
 Load a telescope configuration
@@ -107,6 +107,8 @@ IM = []
 coord = []
 vis = []
 HillasParameters = []
+triggered_telescopes = []
+trigger_intensity = 0.
 
 for tel in alltel:
     X = []
@@ -125,26 +127,28 @@ for tel in alltel:
     # print(hist)
 
     # Compute the Hillas parameters for each image:
-    hp = hillas.hillas_parameters_2(hist[:, 0], hist[:, 1], hist[:, 2])
-    hp.append(tel.id)
-    HillasParameters.append(hp)
+    if hist[:,2].sum() > trigger_intensity:
+        triggered_telescopes.append(tel)
+        hp = hillas.hillas_parameters_2(hist[:, 0], hist[:, 1], hist[:, 2])
+        hp.append(tel.id)
+        HillasParameters.append(hp)
+        allhist += hist[:, 2]
 
-    allhist += hist[:, 2]
-    alt, az = geo.normal_to_altaz(tel.normal)
+        alt, az = geo.normal_to_altaz(tel.normal)
 
-    # save the images:
-    f.write('<telescope telId="%d" position="%f,%f,%f" dirAlt="%f" dirAz="%f" focal="%f">\n' % (
-    tel.id, tel.center[0], tel.center[1], tel.center[2], alt, az, tel.focale))
-    for xyph in hist:
-        f.write('%f,%f,%f;\n' % (xyph[0], xyph[1], xyph[2]))
-    f.write('</telescope>\n')
+        # save the images:
+        f.write('<telescope telId="%d" position="%f,%f,%f" dirAlt="%f" dirAz="%f" focal="%f">\n' % (
+        tel.id, tel.center[0], tel.center[1], tel.center[2], alt, az, tel.focale))
+        for xyph in hist:
+            f.write('%f,%f,%f;\n' % (xyph[0], xyph[1], xyph[2]))
+        f.write('</telescope>\n')
 
-    if BoolPlot:
-        plt.plot(X, Y, 'o', label=tel.center, markersize=3)
+        if BoolPlot:
+            plt.plot(X, Y, 'o', label=tel.center, markersize=3)
 
 # Hillas geometrical reconstruction:
-pa = hillas.impact_parameter_average(alltel, HillasParameters, alt, az)
-p = hillas.impact_parameter_ponderated(alltel, HillasParameters, alt, az)
+pa = hillas.impact_parameter_average(triggered_telescopes, HillasParameters, alt, az)
+p = hillas.impact_parameter_ponderated(triggered_telescopes, HillasParameters, alt, az)
 
 print("Real impact parameter : ", impact_point)
 print("Reco with simple average = %s \tError = %.2fm" % (pa, math.sqrt(((impact_point - pa) ** 2).sum())))
