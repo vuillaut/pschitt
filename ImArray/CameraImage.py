@@ -25,6 +25,7 @@ Functions to compute and display camera images
 
 
 import numpy as np
+import geometry as geo
 
 
 def read_pixel_pos(filename):
@@ -56,7 +57,7 @@ def find_closest_pixel(pos, pixel_tab):
     #D = np.linalg.norm(pixel_tab-pos, axis=1)
     #linalg.norm is surprisingly slow
     x = pixel_tab - pos
-    D = np.sqrt(x[:,0]**2+x[:,1]**2)
+    D = np.sqrt(x[:, 0]**2 + x[:, 1]**2)
     return D.argmin()
 
 
@@ -112,21 +113,6 @@ def shower_image_in_camera_old(telescope, photon_pos_tab, pixel_pos_filename):
     return pix_hist
 
 
-def shower_image_in_camera(telescope, photon_pos_tab):
-    """
-    Compute the real image recorded by the camera from the image of the shower in the camera plane
-    Parameters
-    ----------
-    telescope: telescope class
-    photon_pos_tab: 2D numpy array of the photons position[[x1,y1],[x2,y2],...[xn,yn]]
-
-    Returns
-    -------
-    1D array of the integrated signal in each pixel
-    """
-    signal = photons_to_signal(photon_pos_tab, telescope.pixel_tab)
-    return signal
-
 
 def add_noise_poisson(signal, lam=100):
     """
@@ -140,7 +126,7 @@ def add_noise_poisson(signal, lam=100):
     return signal
 
 
-def camera_image(telescope, photon_pos_tab, lam=0, result_filename=None):
+def shower_image_in_camera(telescope, photon_pos_tab, lam=0, result_filename=None):
     """
     Compute the camera image given the positions of the photons in the camera frame.
     Poissonian noise can be added if lambda > 0
@@ -156,22 +142,47 @@ def camera_image(telescope, photon_pos_tab, lam=0, result_filename=None):
     -------
     Numpy 1D array with the photon count in each pixel
     """
-    pixels_signal = shower_image_in_camera(telescope, photon_pos_tab)
+    pixels_signal = photons_to_signal(photon_pos_tab, telescope.pixel_tab)
     pixels_signal = add_noise_poisson(pixels_signal, lam)
     if result_filename:
         write_camera_image(pix_hist, result_filename)
     return pixels_signal
 
 
-def threshold_pass(pix_hist, threshold):
+def threshold_pass(pix_signal, threshold):
     """
     Test if image signal pass a threshold
-    :param pix_hist: pixel histogram
-    :param threshold: float
-    :return: Boolean
+
+    Parameters
+    ----------
+    pix_signal: photon count 1D Numpy array
+    threshold: float
+
+    Returns
+    -------
+    Boolean
     """
-    if pix_hist.sum()>threshold:
+    if pix_signal.sum() > threshold:
         return True
     else:
         return False
+
+
+def shower_camera_image(shower, tel, noise = 0):
+    """
+    Compute the image of a shower in a telescope camera
+    Background noise can be added
+    Parameters
+    ----------
+    shower: 3D Numpy array with a list of space position points composing the shower
+    tel: telescope class
+
+    Returns
+    -------
+    Numpy 1D array of the photon count in each pixel of the telescope camera
+    """
+    shower_image = geo.image_shower_pfo(shower, tel)
+    shower_cam = geo.site_to_camera_cartesian(shower_image, tel)
+    print(shower_cam)
+    return shower_image_in_camera(tel, shower_cam[:, [0, 1]], noise)
 

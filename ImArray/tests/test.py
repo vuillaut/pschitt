@@ -43,3 +43,29 @@ def test_image_shower_pfo():
     tel.focale = 10
     assert (geo.image_shower_pfo(shower, tel) == np.array([[15, 0, 10], [10, 0, 10]])).all()
 
+
+def test_threshold_pass():
+    """
+    Test the threshold pass function
+    """
+    signal = np.array([0,3,1,5])
+    assert(ci.threshold_pass(signal,8.7))
+
+
+def test_shower_camera_image():
+    shower = np.array([[0, 0, 20], [0, 0, 20], [0, 0, 20]])
+    tel = geo.Telescope([10, 0, 0], [-1./3., 0, 2./3.], 0)
+    tel.pixel_tab = np.array([[0,0],[0,1],[1,0],[-1,1]])
+    print(ci.shower_camera_image(shower, tel))
+    assert (ci.shower_camera_image(shower, tel) == np.array([3,0,0,0])).all()
+
+
+def test_photons_to_signal():
+    photon_pos_tab = np.array([[0, 0], [0, 1], [1, 2], [-1, -1]])
+    pixel_tab = np.array([[0, 0], [0, 0.5], [0, 2]])
+    print(ci.photons_to_signal(photon_pos_tab, pixel_tab))
+
+
+test_photons_to_signal()
+
+#test_shower_camera_image()
