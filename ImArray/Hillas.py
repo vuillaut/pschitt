@@ -247,7 +247,7 @@ def reco_impact_parameter(hillas_parameters_1, alt1, az1, tel1, hillas_parameter
     n3 = np.array([0, 0, 1])
 
     A = np.array([n1, n2, n3])
-    B = np.array([np.vdot(n1,barycenter1), np.vdot(n2,barycenter2),z])
+    B = np.array([np.dot(n1, barycenter1), np.dot(n2, barycenter2), z])
     X = np.linalg.solve(A,B)
     return X
 

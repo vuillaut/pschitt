@@ -32,13 +32,13 @@ def read_pixel_pos(filename):
     Read pixel position for a camera from a data file
     Parameters
     ----------
-    filename
-    string - data file name
+    filename : string - data file name
+
     Returns
     -------
-    [X,Y] array with pixel positions
+    [X,Y] numpy array with pixel positions
     """
-    return np.loadtxt(filename)
+    return np.loadtxt(filename, unpack=True).T
 
 
 def find_closest_pixel(pos, pixel_tab):
@@ -51,17 +51,13 @@ def find_closest_pixel(pos, pixel_tab):
 
     Returns
     -------
-    Pixel index in the given pixel_tab
+    Pixel index in the given pixel_tab, corresponding distance to the pixel
     """
-    X = np.array(pixel_tab[:,0])
-    Y = np.array(pixel_tab[:,1])
-    d = (X-pos[0])**2 + (Y-pos[1])**2
-    #Check if minimal distance is lower than pixel size. If not the point is outside the camera
-    # if d.min() < ((pixel_tab[1:,0]-pixel_tab[0,0])**2 + (pixel_tab[1:,1]-pixel_tab[0,1])**2).min():
-    #     return d.argmin()
-    # else:
-    #     return None
-    return  d.argmin()
+    #D = np.linalg.norm(pixel_tab-pos, axis=1)
+    #linalg.norm is surprisingly slow
+    x = pixel_tab - pos
+    D = np.sqrt(x[:,0]**2+x[:,1]**2)
+    return D.argmin()
 
 
 def photon_count(photon_pos_tab, pixel_tab):
@@ -72,11 +68,27 @@ def photon_count(photon_pos_tab, pixel_tab):
     :return: array
     """
     count = np.zeros(len(pixel_tab))
+    d_max2 = pixel_tab[:,0]**2 + pixel_tab[:,1]**2
     for photon in photon_pos_tab:
-        pxi = find_closest_pixel(photon,pixel_tab)
-        if pxi:
+        if photon[0]**2 + photon[1]**2 < d_max2:
+            pxi = find_closest_pixel(photon, pixel_tab)
             count[pxi] += 1
     return np.column_stack((pixel_tab[:,0],pixel_tab[:,1],count))
+
+
+def photons_to_signal(photon_pos_tab, pixel_tab):
+    """
+    Count the number of photons in each pixel of the camera
+    :param photon_pos_tab: array
+    :param pixel_tab: array [X,Y]
+    :return: array
+    """
+    signal = np.zeros(len(pixel_tab))
+    for photon in photon_pos_tab:
+        pxi = find_closest_pixel(photon, pixel_tab)
+        if pxi:
+            signal[pxi] += 1
+    return signal
 
 
 def write_camera_image(pix_hist, filename="data/camera_image.txt"):
@@ -88,7 +100,7 @@ def write_camera_image(pix_hist, filename="data/camera_image.txt"):
     np.savetxt(filename,pix_hist,fmt='%.5f')
 
 
-def shower_image_in_camera(telescope, photon_pos_tab, pixel_pos_filename):
+def shower_image_in_camera_old(telescope, photon_pos_tab, pixel_pos_filename):
     """
     :param telescope: telescope class
     :param photon_pos_tab: array
@@ -100,31 +112,35 @@ def shower_image_in_camera(telescope, photon_pos_tab, pixel_pos_filename):
     return pix_hist
 
 
-def shower_image_in_camera_2(telescope, photon_pos_tab):
+def shower_image_in_camera(telescope, photon_pos_tab):
     """
-    :param telescope: telescope class
-    :param photon_pos_tab: array
-    :param pixel_pos_filename: string
-    :return: array - pixel histogram
+    Compute the real image recorded by the camera from the image of the shower in the camera plane
+    Parameters
+    ----------
+    telescope: telescope class
+    photon_pos_tab: 2D numpy array of the photons position[[x1,y1],[x2,y2],...[xn,yn]]
+
+    Returns
+    -------
+    1D array of the integrated signal in each pixel
     """
-    pix_hist = photon_count(photon_pos_tab, telescope.pixel_tab)
-    return pix_hist
+    signal = photons_to_signal(photon_pos_tab, telescope.pixel_tab)
+    return signal
 
 
-def add_noise_poisson(pix_hist, lam=100):
+def add_noise_poisson(signal, lam=100):
     """
     Add Poisson noise to the image
     :param pix_hist: pixel histogram
     :param lam: lambda for Poisson law
     :return: pixel histogram
     """
-    l = pix_hist[:,2].size
     if(lam>=0):
-        pix_hist[:,2] += np.random.poisson(lam, l)
-    return pix_hist
+        signal += np.random.poisson(lam, signal.size)
+    return signal
 
 
-def camera_image(telescope, photon_pos_tab, result_filename="data/camera_image.txt", lam=100):
+def camera_image(telescope, photon_pos_tab, lam=100, result_filename=None):
     """
     Compute the camera image
     :param telescope: telescope class
@@ -133,10 +149,11 @@ def camera_image(telescope, photon_pos_tab, result_filename="data/camera_image.t
     :param lam: Poisson law lambda parameter to compute noise
     :return: pixel histogram
     """
-    pix_hist = shower_image_in_camera_2(telescope, photon_pos_tab)
-    pix_hist = add_noise_poisson(pix_hist, lam)
-    #write_camera_image(pix_hist, result_filename)
-    return pix_hist
+    pixels_signal = shower_image_in_camera(telescope, photon_pos_tab)
+    pixels_signal = add_noise_poisson(pixels_signal, lam)
+    if result_filename:
+        write_camera_image(pix_hist, result_filename)
+    return pixels_signal
 
 
 def threshold_pass(pix_hist, threshold):

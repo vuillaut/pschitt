@@ -27,9 +27,9 @@ import CameraImage as ci
 DEF = -10000
 
 #Camera sizes in meters
-LST_RADIUS = 1
-MST_RADIUS = 1
-SST_RADIUS = 0.5
+#LST_RADIUS = 1
+#MST_RADIUS = 1
+#SST_RADIUS = 0.5
 LST_FOCALE = 16
 MST_FOCALE = 10
 SST_FOCALE = 5
@@ -60,20 +60,24 @@ class Telescope:
         self.camera_type = camera_type
         self.pixpos_filename = "data/PosPixel_{0}.txt".format(camera_type)
         self.pixel_tab = ci.read_pixel_pos(self.pixpos_filename)
+        self.signal_hist = np.zeros(len(self.pixel_tab[0]))
+
         if(camera_type>3):
             self.type="sst"
-            self.camera_size = SST_RADIUS
+            #self.camera_size = SST_RADIUS   ## camera size is now given by the pixels positions
             self.focale = SST_FOCALE
         elif(camera_type>0):
             self.type="mst"
-            self.camera_size = MST_RADIUS
+            #self.camera_size = MST_RADIUS
             self.focale = MST_FOCALE
         else:
             self.type="lst"
-            self.camera_size = LST_RADIUS
+            #self.camera_size = LST_RADIUS
             self.focale = LST_FOCALE
+
         self.camera_center = self.center + self.normal * self.focale
-        self.camera_size = math.sqrt((self.pixel_tab[0]**2 +self.pixel_tab[1]**2).max())
+        self.camera_size = math.sqrt((self.pixel_tab[0]**2 +self.pixel_tab[0]**2).max())
+
 
     def display_info(self):
         """Just display some info about telescope and camera"""
@@ -86,6 +90,7 @@ class Telescope:
         print("Focale ", self.focale)
         print("Pixel position datafile ", self.pixpos_filename)
 
+
     def pointing_object(self, point):
         """
         set the pointing direction to a point in space
@@ -94,20 +99,21 @@ class Telescope:
         self.normal = self.normal / np.sqrt((self.normal ** 2).sum())
 
 
+
 def plane_array(point, normal):
     """
     Given a point and a the normal vector of a plane, compute the 4 parameters (a,b,c,d) of the plane equation
-    a*x + b*y + c*z = d
+    a*x + b*y + c*z + d = 0
     Parameters
     ----------
-    point: 3-floats array
-    normal: 3-floats array
+    point: 3-floats Numpy array
+    normal: 3-floats Numpy array
 
     Returns
     -------
     4-floats array
     """
-    d = - (np.array(point)*np.array(normal)).sum()
+    d = - normal.dot(point)
     return np.append(normal, d)
 
 
@@ -116,8 +122,8 @@ def is_point_in_plane(point, plane, eps=1e-6):
     Check if a given point is in a plane
     Parameters
     ----------
-    point: 3-floats array
-    plane: 4-floats array giving the plane coefficients of the cartesian equation a*x+b*y+c*z = d
+    point: 3-floats Numpy array
+    plane: 4-floats Numpy array giving the plane coefficients of the cartesian equation a*x+b*y+c*z = d
     eps: float - desired accuracy
 
     Returns
@@ -194,7 +200,7 @@ def is_point_visible(point, telescope):
         return False
 
 
-def site_to_camera_cartesian(point, telescope):
+def site_to_camera_cartesian_old(point, telescope):
     """
     Given cartesian coordinates of a point in the site frame,
     compute the cartesian coordinates in the camera frame
@@ -216,6 +222,27 @@ def site_to_camera_cartesian(point, telescope):
     y = my_3d_dot(o, e2)
     z = my_3d_dot(o, e3)
     return np.array([x,y,z])
+
+
+def site_to_camera_cartesian(shower, telescope):
+    """
+    Same as before but for whole shower
+    Parameters
+    ----------
+    shower
+    telescope
+
+    Returns
+    -------
+
+    """
+    o = shower - camera_center(telescope)
+    [e1, e2, e3] = camera_base(telescope)
+    x = o.dot(e1)
+    y = o.dot(e2)
+    z = o.dot(e3)
+    return np.array([x, y, z]).T
+
 
 
 def normal_to_altaz(normal):
@@ -366,7 +393,7 @@ def matrices_inter(point_line1, point_line2, point_plane, normal_plane):
     return a, b
 
 
-def image_point_pfi(point, telescope):
+def image_point_pfi_old(point, telescope):
     """
     Compute the coordinates of the image (in the image focal plane) of a given point
     Parameters
@@ -382,7 +409,8 @@ def image_point_pfi(point, telescope):
     inter = np.linalg.solve(a,b)
     return inter
 
-def image_point_pfi_2(point, telescope):
+
+def image_point_pfi(point, telescope):
     """
     Faster way to compute the coordinates of the image (in the image focal plane) of a given point
     Parameters
@@ -399,6 +427,81 @@ def image_point_pfi_2(point, telescope):
     return I
 
 
+def image_shower_pfi(shower, telescope):
+    """
+    Compute the image of a shower in the image focal plan as seen by a telescope
+    Parameters
+    ----------
+    shower: numpy ndarray representing a list of points
+    telescope: telescope class
+
+    Returns
+    -------
+    list of points coordinates [X,Y,Z] of the shower image
+    """
+    e = (telescope.center - shower)
+    norm = np.linalg.norm(telescope.center - shower, axis=1, keepdims=True)
+    e = e / norm
+    theta = e.dot(-telescope.normal)[np.newaxis].T
+    I = telescope.center + telescope.focale/theta * e
+    return I
+
+
+def image_shower_pfo(shower, telescope):
+    image_pfi = image_shower_pfi(shower, telescope)
+    return image_pfi + 2.0 * telescope.focale * telescope.normal
+
+
+def image_shower_pfi_old(shower, telescope):
+    """
+    Compute the image of a shower in the image focal plan as seen by a telescope
+    Parameters
+    ----------
+    shower: list of points coordinates [X,Y,Z]
+    telescope: telescope class
+
+    Returns
+    -------
+    list of points coordinates [X,Y,Z] of the shower image
+    """
+    #ex = (telescope.center - shower[0]) / np.linalg.norm(telescope.center - point)
+    ex = (telescope.center[0] - shower[0])
+    ey = (telescope.center[1] - shower[1])
+    ez = (telescope.center[2] - shower[2])
+    norm = np.sqrt(ex**2 + ey**2 + ez**2)
+
+    ex = ex/norm
+    ey = ey/norm
+    ez = ez/norm
+
+    theta = -( telescope.normal[0] * ex + telescope.normal[1] * ey + telescope.normal[2] * ez)
+
+    ix = telescope.center[0] + (telescope.focale / theta) * ex
+    iy = telescope.center[1] + (telescope.focale / theta) * ey
+    iz = telescope.center[2] + (telescope.focale / theta) * ez
+
+    return ix, iy, iz
+
+
+def image_shower_pfo_old(shower, telescope):
+    """
+    Compute the image of a shower in the object focal plane (plane of the camera) as seen by a telescope
+    Parameters
+    ----------
+    shower: list of points coordinates [X,Y,Z]
+    telescope: telescope class
+
+    Returns
+    -------
+    list of points coordinates [X,Y,Z] of the shower image
+    """
+    ix, iy, iz = image_shower_pfi(shower, telescope)
+    ix += 2.0 * telescope.focale * telescope.normal[0]
+    iy += 2.0 * telescope.focale * telescope.normal[1]
+    iz += 2.0 * telescope.focale * telescope.normal[2]
+    return ix, iy, iz
+
+
 def image_point_pfo(point, telescope):
     """
     Compute the coordinates of the image in the object focal plane) of a given point
@@ -406,7 +509,7 @@ def image_point_pfo(point, telescope):
     :param telescope: telescope class
     :return: 3-floats array
     """
-    image_pfi = image_point_pfi_2(point, telescope)
+    image_pfi = image_point_pfi(point, telescope)
     return image_pfi + 2.0 * telescope.focale * telescope.normal
 
 

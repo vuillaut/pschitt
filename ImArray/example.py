@@ -39,7 +39,7 @@ noise = 0
 '''
 Shower parameters
 '''
-impact_point = np.array([0, 250, 0])
+impact_point = np.array([0, 10, 0])
 
 # shower direction
 salt = math.radians(74)
@@ -58,13 +58,13 @@ slength = 12000
 swidth = 200
 
 
-npoints = 10000
+npoints = 50000
 
 
-shower = obj.linear_segment([0,1000,15000], s_bot, npoints)
-#shower = obj.random_ellipsoide(stop, slength, swidth, salt, saz, impact_point, npoints)
+#shower = obj.linear_segment([0,100,15000], s_bot, npoints)
+shower = obj.random_ellipsoide(stop, slength, swidth, salt, saz, impact_point, npoints)
+#print(shower)
 
-print(shower)
 
 '''
 Load a telescope configuration
@@ -88,10 +88,11 @@ alltel = [tel7, tel8, tel9, tel10]
 # alltel = geo.load_telescopes_flatfloor("data/tel_pos.dat", tel_normal)
 
 
-for tel1 in alltel:
-    for tel2 in alltel:
-        if ((tel1.center == tel2.center).all() and tel1.id != tel2.id):
-            print(tel1.id, tel2.id, tel1.center, tel2.center)
+# for tel1 in alltel:
+#     for tel2 in alltel:
+#         if ((tel1.center == tel2.center).all() and tel1.id != tel2.id):
+#             print(tel1.id, tel2.id, tel1.center, tel2.center)
+print("All telescopes unique : ", geo.telescopes_unicity(alltel))
 
 if BoolPlot:
     viz.plot_shower3d(shower, alltel)
@@ -105,67 +106,35 @@ f = open('results/teldata.xml', 'w')
 f.write("\n")
 f.write("<subarray>\n")
 
-allhist = np.zeros(1855)  ### SIZE SHOULD CHANGE WITH CAMERA TYPE ###
-IM = []
-coord = []
-vis = []
-HillasParameters = []
+
 triggered_telescopes = []
 trigger_intensity = 0.
 
+
+noise = 0
+HP = []
+
 for tel in alltel:
-    X = []
-    Y = []
-    for point in shower:
-        im = geo.image_point_pfo(point, tel)
-        #IM.append(im)
-        center_camera = geo.camera_center(tel)
-        #if geo.is_point_in_camera_plane(im, tel):
-        #    vis.append(geo.is_point_visible(im, tel))
-        im_cam = geo.site_to_camera_cartesian([im[0], im[1], im[2]], tel)
-        X.append(im_cam[0])
-        Y.append(im_cam[1])
-    # hist = ci.camera_image(tel, np.column_stack((X,Y)), filename="results/{}.txt".format(tel.id))
-    hist = ci.camera_image(tel, np.column_stack((X, Y)), "results/{}.txt".format(tel.id), noise)
-    # print(hist)
-    alt, az = geo.normal_to_altaz(tel.normal)
-    # Compute the Hillas parameters for each image:
-    if hist[:,2].sum() > trigger_intensity:
+    shower_image = geo.image_shower_pfo(shower, tel)
+    shower_cam = geo.site_to_camera_cartesian(shower_image, tel)
+    pixels_signal = ci.camera_image(tel, shower_cam[:, [0, 1]], noise)
+
+    if len(pixels_signal.nonzero()[0]) > 1 and pixels_signal.sum() > trigger_intensity:
+        hp = hillas.hillas_parameters(tel.pixel_tab[:, 0], tel.pixel_tab[:, 1], pixels_signal)
+        HP.append(hp)
         triggered_telescopes.append(tel)
-        hp = hillas.hillas_parameters_2(hist[:, 0], hist[:, 1], hist[:, 2])
-        hp.append(tel.id)
-        HillasParameters.append(hp)
-        allhist += hist[:, 2]
 
+pa = hillas.impact_parameter_average(triggered_telescopes, HP, talt, taz)
+p = hillas.impact_parameter_ponderated(triggered_telescopes, HP, talt, taz)
 
-        # save the images:
-        f.write('<telescope telId="%d" position="%f,%f,%f" dirAlt="%f" dirAz="%f" focal="%f">\n' % (
-        tel.id, tel.center[0], tel.center[1], tel.center[2], alt, az, tel.focale))
-        for xyph in hist:
-            f.write('%f,%f,%f;\n' % (xyph[0], xyph[1], xyph[2]))
-        f.write('</telescope>\n')
-
-
-        if BoolPlot:
-            plt.plot(X, Y, 'o', label=tel.center, markersize=3)
-
-
-print(triggered_telescopes)
-
-# Hillas geometrical reconstruction:
-pa = hillas.impact_parameter_average(triggered_telescopes, HillasParameters, alt, az)
-p = hillas.impact_parameter_ponderated(triggered_telescopes, HillasParameters, alt, az)
 
 print("Real impact parameter : ", impact_point)
 print("Reco with simple average = %s \tError = %.2fm" % (pa, math.sqrt(((impact_point - pa) ** 2).sum())))
 print("Reco with ponderation and cut = %s \tError = %.2fm" % (p, math.sqrt(((impact_point - p) ** 2).sum())))
 
 # save the results:
-np.savetxt('results/hillas.txt', HillasParameters, fmt='%.5f',
-           header="size\t<x>\t<y>\tl\tw\tr\tphi\tpsi\tmiss\tTelId")
+#np.savetxt('results/hillas.txt', HP, fmt='%.5f', header="size\t<x>\t<y>\tl\tw\tr\tphi\tpsi\tmiss\tTelId")
 
-hist[:, 2] = allhist
-np.savetxt('results/all.txt', hist, fmt='%.5f')
 
 # print('\nElapsed (ms):', (time.time() - start) * 1000)
 

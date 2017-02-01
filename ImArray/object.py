@@ -29,6 +29,18 @@ import random
 
 
 
+class shower:
+    """
+    Class handling shower object
+    """
+    def __init__(self):
+        """
+        Init
+        """
+        self.type = "Shower"
+        self.tab = np.array([])
+
+
 def linear_segment(shower_top, shower_bot, n):
     """
     Homogeneous repartition of points following a linear segment
@@ -44,6 +56,29 @@ def linear_segment(shower_top, shower_bot, n):
     for i in l:
         shower.append(top - vec * i)
     return np.array(shower)
+
+
+def linear_segment_2(shower_top, shower_bot, n):
+    """
+    Homogeneous repartition of points following a linear segment
+    :param shower_top: array
+    :param shower_bot: array
+    :param n: number of points
+    :return: tuple (X,Y,Z) of the points coordinates
+    """
+    top = np.array(shower_top)
+    vec = top - np.array(shower_bot)
+    l = np.linspace(0,1,n)
+    x = np.empty(n)
+    y = np.empty(n)
+    z = np.empty(n)
+    for idx,i in enumerate(l):
+        point = top - vec * i
+        x[idx] = point[0]
+        y[idx] = point[1]
+        z[idx] = point[2]
+    return (x, y, z)
+
 
 
 def random_surface_sphere(shower_center, shower_radius, n):
