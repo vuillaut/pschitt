@@ -61,23 +61,29 @@ def find_closest_pixel(pos, pixel_tab):
     return D.argmin()
 
 
-def photon_count(photon_pos_tab, pixel_tab):
+def photons_to_signal(photon_pos_tab, pixel_tab):
     """
-    Count the number of photons in a pixel
-    :param photon_pos_tab: array
-    :param pixel_tab: array [X,Y]
-    :return: array
+    Count the number of photons in each pixel of the pixel_tab (camera)
+
+    Parameters
+    ----------
+    photon_pos_tab: Numpy 2D array with the position of the photons in the camera frame
+    pixel_tab: Numpy 2D array with the positions of the pixels in the camera frame
+
+    Returns
+    -------
+    Numpy 1D array with the signal in each pixel
     """
     count = np.zeros(len(pixel_tab))
-    d_max2 = pixel_tab[:,0]**2 + pixel_tab[:,1]**2
+    d_max2 = (pixel_tab[:, 0]**2 + pixel_tab[:, 1]**2).max()
     for photon in photon_pos_tab:
         if photon[0]**2 + photon[1]**2 < d_max2:
             pxi = find_closest_pixel(photon, pixel_tab)
             count[pxi] += 1
-    return np.column_stack((pixel_tab[:,0],pixel_tab[:,1],count))
+    return count
 
 
-def photons_to_signal(photon_pos_tab, pixel_tab):
+def photons_to_signal_old(photon_pos_tab, pixel_tab):
     """
     Count the number of photons in each pixel of the camera
     :param photon_pos_tab: array

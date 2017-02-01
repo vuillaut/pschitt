@@ -56,16 +56,10 @@ def test_shower_camera_image():
     shower = np.array([[0, 0, 20], [0, 0, 20], [0, 0, 20]])
     tel = geo.Telescope([10, 0, 0], [-1./3., 0, 2./3.], 0)
     tel.pixel_tab = np.array([[0,0],[0,1],[1,0],[-1,1]])
-    print(ci.shower_camera_image(shower, tel))
-    assert (ci.shower_camera_image(shower, tel) == np.array([3,0,0,0])).all()
+    assert (ci.shower_camera_image(shower, tel) == np.array([3, 0, 0, 0])).all()
 
 
 def test_photons_to_signal():
     photon_pos_tab = np.array([[0, 0], [0, 1], [1, 2], [-1, -1]])
-    pixel_tab = np.array([[0, 0], [0, 0.5], [0, 2]])
-    print(ci.photons_to_signal(photon_pos_tab, pixel_tab))
-
-
-#test_photons_to_signal()
-
-#test_shower_camera_image()
+    pixel_tab = np.array([[0, 0], [0, 0.51], [0, 2]])
+    assert (ci.photons_to_signal(photon_pos_tab, pixel_tab) == np.array([ 2,  1,  0])).all()
