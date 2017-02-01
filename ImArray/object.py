@@ -224,7 +224,8 @@ def Gaisser_Hillas(Nmax, X1, Xmax, X):
 def NKG(X1, X, r):
     rm = 118.
     t = (X - X1) / 36.7
-    tmax = 1.7 + 0.76 * (math.log(1e12 / 81e6) - math.log(1))
+    #tmax = 1.7 + 0.76 * (math.log(1e12 / 81e6) - math.log(1))
+    tmax = 1.7 + 0.76 * 4.0915
     s = 2 * t / (t + tmax)
 
     # print(r/118)
@@ -263,11 +264,13 @@ def Get_pos_Gaisser_Hillas(Npart, alt, az, impact_point):
     y = []
     z = []
 
-    for i in range(1000):
-        f.append(i)
+    # for i in range(1000):
+    #     f.append(i)
+
+    f = np.arange(1000)
 
     r = np.arange(1, 350., 10)
-    print(r)
+    #print(r)
 
     # plt.plot(r)
     # plt.show()
