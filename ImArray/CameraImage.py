@@ -140,14 +140,21 @@ def add_noise_poisson(signal, lam=100):
     return signal
 
 
-def camera_image(telescope, photon_pos_tab, lam=100, result_filename=None):
+def camera_image(telescope, photon_pos_tab, lam=0, result_filename=None):
     """
-    Compute the camera image
-    :param telescope: telescope class
-    :param photon_pos_tab: array
-    :param result_filename: string
-    :param lam: Poisson law lambda parameter to compute noise
-    :return: pixel histogram
+    Compute the camera image given the positions of the photons in the camera frame.
+    Poissonian noise can be added if lambda > 0
+    The image can be saved in a textfile if a result_filename is given
+    Parameters
+    ----------
+    telescope: telescope class
+    photon_pos_tab: Numpy 2D array with the cartesian positions of the the photons in the camera frame [[x1,y1],[x2,y2],...]
+    lam: lambda for the poissonian noise
+    result_filename: string, name of file to write the resulting image
+
+    Returns
+    -------
+    Numpy 1D array with the photon count in each pixel
     """
     pixels_signal = shower_image_in_camera(telescope, photon_pos_tab)
     pixels_signal = add_noise_poisson(pixels_signal, lam)
