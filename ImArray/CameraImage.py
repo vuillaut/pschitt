@@ -183,6 +183,6 @@ def shower_camera_image(shower, tel, noise = 0):
     """
     shower_image = geo.image_shower_pfo(shower, tel)
     shower_cam = geo.site_to_camera_cartesian(shower_image, tel)
-    print(shower_cam)
+    #print(shower_cam)
     return shower_image_in_camera(tel, shower_cam[:, [0, 1]], noise)
 

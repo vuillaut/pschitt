@@ -66,6 +66,6 @@ def test_photons_to_signal():
     print(ci.photons_to_signal(photon_pos_tab, pixel_tab))
 
 
-test_photons_to_signal()
+#test_photons_to_signal()
 
 #test_shower_camera_image()
