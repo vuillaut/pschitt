@@ -296,12 +296,12 @@ def Get_pos_Gaisser_Hillas(Npart, alt, az, impact_point):
         # plt.show()
 
         yval2 = random.uniform(min(D), max(D))
-        dist.append(gcm2distance(np.interp(yval, Nsum, f), pi / 2 - alt))
+        dist.append(gcm2distance(np.interp(yval, Nsum, f), math.pi / 2. - alt))
 
         radius.append(np.interp(yval2, r, D))
         # print(min(D),max(D),random.uniform(min(D), max(D)))
-        x.append(radius[k] * cos(random.uniform(0, 2 * math.pi)))
-        y.append(radius[k] * sin(random.uniform(0, 2 * math.pi)))
+        x.append(radius[k] * np.cos(random.uniform(0, 2 * math.pi)))
+        y.append(radius[k] * np.sin(random.uniform(0, 2 * math.pi)))
         z.append(dist[k])
     # plt.plot(dist,radius)
     # plt.show()
@@ -309,7 +309,7 @@ def Get_pos_Gaisser_Hillas(Npart, alt, az, impact_point):
         shower.append([x[i], y[i], z[i]])
     shower_rot = []
     for point in shower:
-        point_rot = geo.rotation_matrix_z(az) * geo.rotation_matrix_y(pi / 2. - alt) * np.matrix(point).T
+        point_rot = geo.rotation_matrix_z(az) * geo.rotation_matrix_y(math.pi / 2. - alt) * np.matrix(point).T
         # rotpoint = geo.rotation_matrix_y(rot)*np.matrix(point).T
         shower_rot.append(np.array(np.asarray(point_rot.T)[0]) + np.array(impact_point))
     return np.array(shower_rot)
