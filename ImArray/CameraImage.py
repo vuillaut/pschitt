@@ -83,20 +83,6 @@ def photons_to_signal(photon_pos_tab, pixel_tab):
     return count
 
 
-def photons_to_signal_old(photon_pos_tab, pixel_tab):
-    """
-    Count the number of photons in each pixel of the camera
-    :param photon_pos_tab: array
-    :param pixel_tab: array [X,Y]
-    :return: array
-    """
-    signal = np.zeros(len(pixel_tab))
-    for photon in photon_pos_tab:
-        pxi = find_closest_pixel(photon, pixel_tab)
-        if pxi:
-            signal[pxi] += 1
-    return signal
-
 
 def write_camera_image(pix_hist, filename="data/camera_image.txt"):
     """
@@ -109,6 +95,7 @@ def write_camera_image(pix_hist, filename="data/camera_image.txt"):
 
 def shower_image_in_camera_old(telescope, photon_pos_tab, pixel_pos_filename):
     """
+    Depreciated
     :param telescope: telescope class
     :param photon_pos_tab: array
     :param pixel_pos_filename: string
