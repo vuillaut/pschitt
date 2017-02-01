@@ -5,6 +5,9 @@ import Hillas as hillas
 import numpy as np
 
 def test_image_point_pfi():
+    """
+    Test the projection of a point in the image focal plane
+    """
     tel = geo.Telescope([0, 0, 0], [0,0,1], 0)
     tel.focale = 10
     point = np.array([5,0,20])
@@ -12,6 +15,9 @@ def test_image_point_pfi():
 
 
 def test_image_point_pfo():
+    """
+    Test the projection of a point in the object focal plane
+    """
     tel = geo.Telescope([0, 0, 0], [0, 0, 1], 0)
     tel.focale = 10
     point = np.array([5, 0, 20])
@@ -19,6 +25,9 @@ def test_image_point_pfo():
 
 
 def test_image_shower_pfi():
+    """
+    Test the projection of a shower in the image focal plane
+    """
     shower = np.array([[0, 0, 20], [10, 0, 20]])
     tel = geo.Telescope([10, 0, 0], [0, 0, 1], 0)
     tel.focale= 10
@@ -26,6 +35,9 @@ def test_image_shower_pfi():
 
 
 def test_image_shower_pfo():
+    """
+    Test the projection of a shower in the object focal plane
+    """
     shower = np.array([[0, 0, 20], [10, 0, 20]])
     tel = geo.Telescope([10, 0, 0], [0, 0, 1], 0)
     tel.focale = 10
