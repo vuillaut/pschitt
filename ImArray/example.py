@@ -107,22 +107,14 @@ f.write("\n")
 f.write("<subarray>\n")
 
 
-triggered_telescopes = []
 trigger_intensity = 0.
-
-
 noise = 0
-HP = []
 
 for tel in alltel:
-    shower_image = geo.image_shower_pfo(shower, tel)
-    shower_cam = geo.site_to_camera_cartesian(shower_image, tel)
-    pixels_signal = ci.shower_image_in_camera(tel, shower_cam[:, [0, 1]], noise)
+    pixels_signal = ci.shower_camera_image(shower, tel, noise)
 
-    if len(pixels_signal.nonzero()[0]) > 1 and pixels_signal.sum() > trigger_intensity:
-        hp = hillas.hillas_parameters(tel.pixel_tab[:, 0], tel.pixel_tab[:, 1], pixels_signal)
-        HP.append(hp)
-        triggered_telescopes.append(tel)
+HP, triggered_telescopes = hillas.array_hillas_parameters(alltel, trigger_intensity)
+
 
 pa = hillas.impact_parameter_average(triggered_telescopes, HP, talt, taz)
 p = hillas.impact_parameter_ponderated(triggered_telescopes, HP, talt, taz)

@@ -53,6 +53,9 @@ def test_threshold_pass():
 
 
 def test_shower_camera_image():
+    """
+    Test the image camera of a shower
+    """
     shower = np.array([[0, 0, 20], [0, 0, 20], [0, 0, 20]])
     tel = geo.Telescope([10, 0, 0], [-1./3., 0, 2./3.], 0)
     tel.pixel_tab = np.array([[0,0],[0,1],[1,0],[-1,1]])
@@ -63,3 +66,11 @@ def test_photons_to_signal():
     photon_pos_tab = np.array([[0, 0], [0, 1], [1, 2], [-1, -1]])
     pixel_tab = np.array([[0, 0], [0, 0.51], [0, 2]])
     assert (ci.photons_to_signal(photon_pos_tab, pixel_tab) == np.array([ 2,  1,  0])).all()
+
+
+def test_is_particle_visible():
+    particle_position = np.array([10, 0, 20])
+    telescope = geo.Telescope([0, 0, 0], [0, 0, 1], 0)
+    particle_direction = np.array([-1, 0, -2])
+    particle_energy = 1
+    assert is_particle_visible(particle_position, particle_direction, particle_energy, telescope)

@@ -55,11 +55,17 @@ class Telescope:
         Telescope.id += 1
         self.id = Telescope.id
         self.center = np.array(center)
-        #self.normal = np.array(list(sympy.Matrix(normal).normalized().evalf()))
         self.normal = np.array(normal)/np.linalg.norm(normal)
         self.camera_type = camera_type
         self.pixpos_filename = "data/PosPixel_{0}.txt".format(camera_type)
-        self.pixel_tab = ci.read_pixel_pos(self.pixpos_filename)
+        try:
+            self.pixel_tab = ci.read_pixel_pos(self.pixpos_filename)
+        except:
+            print("The file {0} desired for the telescope {1} camera's pixels positions does not exist !" \
+            "A standard array of pixel positions will be used instead".format(self.pixpos_filename, Telescope.id))
+            self.pixel_tab = np.array([[-0.05, 0], [0, 0], [0, 0.05], [-0.05, -0.05], [0.05, 0.05],
+                                       [0, -0.05], [0.05, 0], [-0.05, 0.05], [0.05, -0.05]])
+            self.pixpos_filename = None
         self.signal_hist = np.zeros(len(self.pixel_tab[0]))
 
         if(camera_type>3):
@@ -792,32 +798,13 @@ def is_particle_visible(particle_position, particle_direction, particle_energy, 
 
     # vector particle-telescope:
     PT = telescope.camera_center - np.array(particle_position)
-    PT = PT/np.linalg.norm(PT)
+    PT = PT / my_3d_norm(PT)
 
     # angle between particle direction and PT
-    theta_pt = np.arccos(np.dot(particle_direction, PT)/np.linalg.norm(particle_direction))
+    theta_pt = np.arccos(PT.dot(particle_direction) / my_3d_norm(particle_direction))
 
     #particle emission transmission
     Tau = particle_transmission_coefficient(particle_energy, particle_position[2])
 
     return (theta_pt < particle_cone_angle(particle_energy)) & (np.random.rand() < Tau)
 
-
-def cherenkov_ground_ellipse_parameters(particle_position, particle_direction, cherenkov_cone_angle):
-    """
-    compute the parameters of the ellipse created by the illumination of the ground by a cherenkov shower
-    the ground is supposed to be given by z=0
-
-    Parameters
-    ----------
-    particle_position: 3-floats array
-    particle_direction: 3-floats array - direction vector
-    cherenkov_cone_angle: float, angle in rad
-
-    Returns
-    -------
-
-    """
-
-    #center of the ellipse (= impact point)
-    #x0 = (2. * ) / ()
