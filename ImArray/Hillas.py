@@ -311,3 +311,29 @@ def impact_parameter_ponderated(alltel, HillasParameters, alt, az):
     #    C = (C - C.min())/(C.max()-C.min())
 
     return [np.average(P[:,0],weights=C), np.average(P[:,1],weights=C), np.average(P[:,2],weights=C)]
+
+
+def array_hillas_parameters(tel_array, trigger_intensity):
+    """
+    Given an array of telescopes, compute the hillas parameteres for each camera images
+    Hillas Parameters are computed if the telescope triggered (total intensity > trigger_intensity)
+    Parameters
+    ----------
+    tel_array: list of telescope classes
+    trigger_intensity: float - threshold to trigger a telescope
+
+    Returns
+    -------
+    list of hillas parameters. Hillas parameters of each cameras are contained in a 1D Numpy array.
+    list of triggered telescopes
+    """
+    HP = []
+    triggered_telescopes = []
+    for tel in tel_array:
+        pixels_signal = tel.signal_hist
+        if len(pixels_signal.nonzero()[0]) > 1 and pixels_signal.sum() > trigger_intensity:
+            hp = hillas_parameters(tel.pixel_tab[:, 0], tel.pixel_tab[:, 1], pixels_signal)
+            HP.append(hp)
+            triggered_telescopes.append(tel)
+
+    return HP, triggered_telescopes
