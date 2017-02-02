@@ -163,7 +163,7 @@ def threshold_pass(pix_signal, threshold):
 
 def shower_camera_image(shower, tel, noise = 0):
     """
-    Compute the image of a shower in a telescope camera
+    Given a shower object and a telescope, compute the image of the shower in the camera
     Background noise can be added
     Parameters
     ----------
@@ -176,6 +176,22 @@ def shower_camera_image(shower, tel, noise = 0):
     """
     shower_image = geo.image_shower_pfo(shower, tel)
     shower_cam = geo.site_to_camera_cartesian(shower_image, tel)
-    #print(shower_cam)
-    return shower_image_in_camera(tel, shower_cam[:, [0, 1]], noise)
+    tel.signal_hist = shower_image_in_camera(tel, shower_cam[:, [0, 1]], noise)
+    return tel.signal_hist
+
+
+def array_shower_imaging(shower, tel_array, noise):
+    """
+    Given a shower object and an array of telescopes, compute the image of the shower in each camera
+    Background noise can be added
+    The camera signal is registered in all tel.signal_hist
+    Parameters
+    ----------
+    shower: 3D Numpy array with a list of space position points composing the shower
+    tel_array: Numpy array or list of telescope classes
+    noise: float
+    """
+    for tel in tel_array:
+        ci.shower_camera_image(shower, tel, noise)
+
 
