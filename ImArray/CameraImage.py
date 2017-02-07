@@ -26,6 +26,7 @@ Functions to compute and display camera images
 
 import numpy as np
 import geometry as geo
+from numba import jit
 
 
 def read_pixel_pos(filename):
@@ -61,6 +62,7 @@ def find_closest_pixel(pos, pixel_tab):
     return D.argmin()
 
 
+@jit
 def photons_to_signal(photon_pos_tab, pixel_tab):
     """
     Count the number of photons in each pixel of the pixel_tab (camera)
@@ -83,7 +85,6 @@ def photons_to_signal(photon_pos_tab, pixel_tab):
     return count
 
 
-
 def write_camera_image(pix_hist, filename="data/camera_image.txt"):
     """
     Save camera image in a file
@@ -104,7 +105,6 @@ def shower_image_in_camera_old(telescope, photon_pos_tab, pixel_pos_filename):
     pixel_tab = read_pixel_pos(pixel_pos_filename)
     pix_hist = photon_count(photon_pos_tab, pixel_tab)
     return pix_hist
-
 
 
 def add_noise_poisson(signal, lam=100):
@@ -192,6 +192,6 @@ def array_shower_imaging(shower, tel_array, noise):
     noise: float
     """
     for tel in tel_array:
-        ci.shower_camera_image(shower, tel, noise)
+        shower_camera_image(shower, tel, noise)
 
 

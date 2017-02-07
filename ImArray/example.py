@@ -110,9 +110,11 @@ f.write("<subarray>\n")
 trigger_intensity = 0.
 noise = 0
 
-for tel in alltel:
-    pixels_signal = ci.shower_camera_image(shower, tel, noise)
 
+# Compute the images of the shower for each camera:
+ci.array_shower_imaging(shower, alltel, noise)
+
+# Compute all the Hillas parameters
 HP, triggered_telescopes = hillas.array_hillas_parameters(alltel, trigger_intensity)
 
 
