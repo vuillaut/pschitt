@@ -141,7 +141,7 @@ def random_ellipsoide_alongz(shower_center, shower_length, shower_width, n):
     z = shower_center[2] + q/2. * np.cos(theta)
     for i in np.arange(n):
         shower.append([x[i],y[i],z[i]])
-    return shower
+    return np.array(shower)
 
 
 def shifted_ellipsoide_v1(shower_center, shower_length, shower_width, n, p, origin_altitude):
@@ -205,7 +205,7 @@ def random_ellipsoide(shower_top_altitude, shower_length, shower_width, alt, az,
     -------
     list of points in the shower (3-floats arrays)
     """
-    shower_center = [0,0,shower_top_altitude - shower_length/2.]
+    shower_center = [0, 0, shower_top_altitude - shower_length/2.]
     shower = random_ellipsoide_alongz(shower_center, shower_length, shower_width, n)
     shower_rot = []
     for point in shower:
@@ -251,31 +251,28 @@ def gcm2distance(X, theta):
 
 
 def Get_pos_Gaisser_Hillas(Npart, alt, az, impact_point):
-    shower = []
-    f = []
+    shower = np.empty([Npart, 3])
+    # shower_rot = np.empty([Npart, 3])
     N = []
+    impact_point = np.array(impact_point)
     Xinterp = []
-    Rinterp = []
-    dist = []
-    r = []
-    radius = []
-    ang = []
-    x = []
-    y = []
-    z = []
-
-    # for i in range(1000):
-    #     f.append(i)
+    # dist = []
+    # radius = []
+    # x = []
+    # y = []
+    # z = []
+    dist = np.empty(Npart)
+    radius = np.empty(Npart)
+    x = np.empty(Npart)
+    y = np.empty(Npart)
+    z = np.empty(Npart)
 
     f = np.arange(1000)
-
     r = np.arange(1, 350., 10)
-    #print(r)
 
-    # plt.plot(r)
-    # plt.show()
-    for j in f:
+    for j in f: ### why 1000 ? -> param
         N.append(Gaisser_Hillas(Npart, 0., 600, j))
+        #N[j] = Gaisser_Hillas(Npart, 0., 600, j)
     Nsum = np.cumsum(N)
 
     for k in range(Npart):
@@ -284,35 +281,46 @@ def Get_pos_Gaisser_Hillas(Npart, alt, az, impact_point):
         Xinterp.append(np.interp(yval, Nsum, f))
         for m in range(35):
             D.append(NKG(0, np.interp(yval, Nsum, f), r[m]))
-        Dsum = np.cumsum(D)
-        # plt.plot(r,D)
-        # plt.yscale("log")
-        # plt.show()
 
-        # rand2=random.uniform(0, max(D))
-
-        # plt.plot(r,D)
-        # plt.xlim(1e-1, 1e2)
-        # plt.ylim(min(Dsum), max(Dsum))
-        ##plt.xscale('log')
-        # plt.yscale('log')
-        # plt.show()
+        # Dsum = np.cumsum(D) ### not used
 
         yval2 = random.uniform(min(D), max(D))
-        dist.append(gcm2distance(np.interp(yval, Nsum, f), math.pi / 2. - alt))
 
-        radius.append(np.interp(yval2, r, D))
-        # print(min(D),max(D),random.uniform(min(D), max(D)))
-        x.append(radius[k] * np.cos(random.uniform(0, 2 * math.pi)))
-        y.append(radius[k] * np.sin(random.uniform(0, 2 * math.pi)))
-        z.append(dist[k])
-    # plt.plot(dist,radius)
-    # plt.show()
+        #dist.append(gcm2distance(np.interp(yval, Nsum, f), math.pi / 2. - alt))
+        dist[k] = gcm2distance(np.interp(yval, Nsum, f), math.pi / 2. - alt)
+
+        #radius.append(np.interp(yval2, r, D))
+        radius[k] = np.interp(yval2, r, D)
+
+        # x.append(radius[k] * np.cos(random.uniform(0, 2 * math.pi)))
+        # y.append(radius[k] * np.sin(random.uniform(0, 2 * math.pi)))
+        # z.append(dist[k])
+        # x[k] = radius[k] * math.cos(random.uniform(0, 2 * math.pi))
+        # y[k] = radius[k] * math.sin(random.uniform(0, 2 * math.pi))
+        # z[k] = dist[k]
+        ### are you sure you don't need the same angle for x and y ???
+
+    angles = np.random.uniform(0, 2. * math.pi, Npart)
+    x = radius * np.cos(angles)
+    y = radius * np.sin(angles)
+    z = dist
+
     for i in range(Npart):
-        shower.append([x[i], y[i], z[i]])
-    shower_rot = []
-    for point in shower:
-        point_rot = geo.rotation_matrix_z(az) * geo.rotation_matrix_y(math.pi / 2. - alt) * np.matrix(point).T
-        # rotpoint = geo.rotation_matrix_y(rot)*np.matrix(point).T
-        shower_rot.append(np.array(np.asarray(point_rot.T)[0]) + np.array(impact_point))
-    return np.array(shower_rot)
+        #shower.append([x[i], y[i], z[i]])
+        shower[i] = [x[i], y[i], z[i]]
+
+    return shower
+    #return shower_rot(shower, alt, az, impact_point)
+
+
+def shower_rot(shower, alt, az, impact_point):
+    # shower_rot = np.empty([len(shower), 3])
+
+    # for idx, point in enumerate(shower):
+    #     point_rot = geo.rotation_matrix_z(az) * geo.rotation_matrix_y(math.pi / 2. - alt) * np.matrix(point).T
+    #     #shower_rot.append(np.array(np.asarray(point_rot.T)[0]) + impact_point)
+    #     shower_rot[idx] = np.array(np.asarray(point_rot.T)[0]) + impact_point
+
+    shower_rot = geo.rotation_matrix_z(az) * geo.rotation_matrix_y(math.pi / 2. - alt) * shower.T
+
+    return shower_rot.T
