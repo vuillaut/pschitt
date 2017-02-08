@@ -314,12 +314,6 @@ def Get_pos_Gaisser_Hillas(Npart, alt, az, impact_point):
 
 
 def shower_rot(shower, alt, az, impact_point):
-    # shower_rot = np.empty([len(shower), 3])
-
-    # for idx, point in enumerate(shower):
-    #     point_rot = geo.rotation_matrix_z(az) * geo.rotation_matrix_y(math.pi / 2. - alt) * np.matrix(point).T
-    #     #shower_rot.append(np.array(np.asarray(point_rot.T)[0]) + impact_point)
-    #     shower_rot[idx] = np.array(np.asarray(point_rot.T)[0]) + impact_point
 
     shower_rot = geo.rotation_matrix_z(az) * geo.rotation_matrix_y(math.pi / 2. - alt) * shower.T
 
