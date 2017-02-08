@@ -188,6 +188,25 @@ def plot3d(shower):
     plt.show()
 
 
+def shower_rot(shower, alt, az):
+    """
+    Given a series of point on the Z axis, perform a rotation of alt around Y and az around Z
+
+    Parameters
+    ----------
+    shower: numpy array of shape (N,3) giving N points coordinates
+    alt: altitude shower direction - float
+    az: azimuth shower direction - float
+    impact_point: numpy array
+
+    Returns
+    -------
+    Numpy array of shape (N,3) giving N points coordinates
+    """
+    rotated_shower = geo.rotation_matrix_z(az) * geo.rotation_matrix_y(math.pi / 2. - alt) * shower.T
+    return rotated_shower.T
+
+
 def random_ellipsoide(shower_top_altitude, shower_length, shower_width, alt, az, impact_point, n):
     """
     Compute a list of N random points in an ellipsoid. The ellipsoid comes from direction (alt,az) and goes through impact_point
@@ -207,12 +226,7 @@ def random_ellipsoide(shower_top_altitude, shower_length, shower_width, alt, az,
     """
     shower_center = [0, 0, shower_top_altitude - shower_length/2.]
     shower = random_ellipsoide_alongz(shower_center, shower_length, shower_width, n)
-    shower_rot = []
-    for point in shower:
-        point_rot = geo.rotation_matrix_z(az) * geo.rotation_matrix_y(math.pi/2. - alt) * np.matrix(point).T
-        #rotpoint = geo.rotation_matrix_y(rot)*np.matrix(point).T
-        shower_rot.append(np.array(np.asarray(point_rot.T)[0]) + np.array(impact_point))
-    return np.array(shower_rot)
+    return shower_rot(shower, alt, az) + np.array(impact_point)
 
 
 def Gaisser_Hillas(Nmax, X1, Xmax, X):
@@ -312,9 +326,3 @@ def Get_pos_Gaisser_Hillas(Npart, alt, az, impact_point):
     return shower
     #return shower_rot(shower, alt, az, impact_point)
 
-
-def shower_rot(shower, alt, az, impact_point):
-
-    shower_rot = geo.rotation_matrix_z(az) * geo.rotation_matrix_y(math.pi / 2. - alt) * shower.T
-
-    return shower_rot.T
