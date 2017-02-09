@@ -204,7 +204,7 @@ def shower_rot(shower, alt, az):
     Numpy array of shape (N,3) giving N points coordinates
     """
     rotated_shower = geo.rotation_matrix_z(az) * geo.rotation_matrix_y(math.pi / 2. - alt) * shower.T
-    return rotated_shower.T
+    return np.array(rotated_shower.T)
 
 
 def random_ellipsoide(shower_top_altitude, shower_length, shower_width, alt, az, impact_point, n):

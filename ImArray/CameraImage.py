@@ -62,7 +62,6 @@ def find_closest_pixel(pos, pixel_tab):
     return D.argmin()
 
 
-@jit
 def photons_to_signal(photon_pos_tab, pixel_tab):
     """
     Count the number of photons in each pixel of the pixel_tab (camera)

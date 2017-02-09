@@ -33,7 +33,7 @@ import vizualisation as viz
 MEAN = np.empty(0)
 
 # If you want some plots to be done
-BoolPlot = False
+BoolPlot = True
 noise = 0
 
 '''
@@ -58,11 +58,14 @@ slength = 12000
 swidth = 200
 
 
-npoints = 50000
+npoints = 5000
 
 
 #shower = obj.linear_segment([0,100,15000], s_bot, npoints)
 shower = obj.random_ellipsoide(stop, slength, swidth, salt, saz, impact_point, npoints)
+print(shower)
+print(type(shower))
+#shower = obj.Get_pos_Gaisser_Hillas(npoints, salt, saz, impact_point)
 #print(shower)
 
 
@@ -102,9 +105,10 @@ start = time.time()
 # file to save images
 if not os.path.isdir('results'):
     os.mkdir('results')
-f = open('results/teldata.xml', 'w')
-f.write("\n")
-f.write("<subarray>\n")
+
+# f = open('results/teldata.xml', 'w')
+# f.write("\n")
+# f.write("<subarray>\n")
 
 
 trigger_intensity = 0.
@@ -132,12 +136,10 @@ print("Reco with ponderation and cut = %s \tError = %.2fm" % (p, math.sqrt(((imp
 
 # print('\nElapsed (ms):', (time.time() - start) * 1000)
 
-f.write('\n</subarray>')
-f.close()
 
-if BoolPlot:
-    plt.xkcd()
-    plt.legend(loc='upper center', fancybox=True, ncol=3, bbox_to_anchor=(0.5, 1.1))
-    plt.show()
+# if BoolPlot:
+#     plt.xkcd()
+#     plt.legend(loc='upper center', fancybox=True, ncol=3, bbox_to_anchor=(0.5, 1.1))
+#     plt.show()
 
 plt.close()
