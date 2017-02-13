@@ -21,7 +21,7 @@ thomas.vuillaume@lapp.in2p3.fr
 
 import geometry as geo
 import numpy as np
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import time
 import math
 import object as obj
@@ -33,7 +33,7 @@ import vizualisation as viz
 MEAN = np.empty(0)
 
 # If you want some plots to be done
-BoolPlot = True
+BoolPlot = False
 noise = 0
 
 '''
@@ -58,7 +58,7 @@ slength = 12000
 swidth = 200
 
 
-npoints = 5000
+npoints = 1500
 
 
 #shower = obj.linear_segment([0,100,15000], s_bot, npoints)
@@ -142,4 +142,4 @@ print("Reco with ponderation and cut = %s \tError = %.2fm" % (p, math.sqrt(((imp
 #     plt.legend(loc='upper center', fancybox=True, ncol=3, bbox_to_anchor=(0.5, 1.1))
 #     plt.show()
 
-plt.close()
+#plt.close()

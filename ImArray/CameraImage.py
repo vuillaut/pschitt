@@ -42,14 +42,14 @@ def read_pixel_pos(filename):
     """
     return np.loadtxt(filename, unpack=True).T
 
-
+@jit
 def find_closest_pixel(pos, pixel_tab):
     """
     Compute the closest pixel of a given position
     Parameters
     ----------
-    pos : 3-floats array giving a position
-    pixel_tab : [X,Y] array of pixels positions
+    pos : 1D Numpy array giving a position
+    pixel_tab : N-dim Numpy array of pixels positions [X,Y]
 
     Returns
     -------
@@ -58,8 +58,10 @@ def find_closest_pixel(pos, pixel_tab):
     #D = np.linalg.norm(pixel_tab-pos, axis=1)
     #linalg.norm is surprisingly slow
     x = pixel_tab - pos
-    D = np.sqrt(x[:, 0]**2 + x[:, 1]**2)
-    return D.argmin()
+    # D = np.sqrt(x[:, 0]**2 + x[:, 1]**2)
+    D2 = x[:, 0] ** 2 + x[:, 1] ** 2
+    return D2.argmin()
+
 
 
 def photons_to_signal(photon_pos_tab, pixel_tab):
@@ -68,7 +70,7 @@ def photons_to_signal(photon_pos_tab, pixel_tab):
 
     Parameters
     ----------
-    photon_pos_tab: Numpy 2D array with the position of the photons in the camera frame
+    photon_pos_tab: Numpy 2D array shape (N,2) with the position of the photons in the camera frame
     pixel_tab: Numpy 2D array with the positions of the pixels in the camera frame
 
     Returns
@@ -79,8 +81,16 @@ def photons_to_signal(photon_pos_tab, pixel_tab):
     d_max2 = (pixel_tab[:, 0]**2 + pixel_tab[:, 1]**2).max()
     for photon in photon_pos_tab:
         if photon[0]**2 + photon[1]**2 < d_max2:
-            pxi = find_closest_pixel(photon, pixel_tab)
-            count[pxi] += 1
+            # pxi = find_closest_pixel(photon, pixel_tab)
+            x = pixel_tab - photon
+            D2 = x[:, 0] ** 2 + x[:, 1] ** 2
+            # pxi = D2.argmin()
+            count[D2.argmin()] += 1
+
+    # for photon in photon_pos_tab:
+    #     pxi = find_closest_pixel(photon, pixel_tab)
+    #     count[pxi] += photon[0]**2 + photon[1]**2 < d_max2
+
     return count
 
 
