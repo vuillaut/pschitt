@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import mpl_toolkits.mplot3d.art3d as art3d
-from mpl_toolkits.mplot3d import Axes3D
 
 
 def plot_shower3d(shower,alltel):
@@ -24,7 +23,7 @@ def plot_shower3d(shower,alltel):
     plt.show()
 
 
-def display_camera_image(telescope, histogram):
+def display_camera_image(telescope):
     """
     display an image of the camera of the telescope
     Parameters
@@ -32,11 +31,28 @@ def display_camera_image(telescope, histogram):
     telescope : telescope class
     histogram : histogram of the signal in each pixel
     """
-    X, Y = np.loadtxt(telescope.pixpos_filename, unpack = True)
-    plt.scatter(X,Y,c=histogram)
+    plt.scatter(telescope.pixel_tab[:, 0], telescope.pixel_tab[:, 1], c=telescope.signal_hist)
     plt.axis('equal')
-    plt.show()
-    return X,Y,histogram
+    plt.colorbar(label='counts')
+
+
+def display_stacked_cameras(telescope_array):
+    """
+    Display stacked camera images. This only works if all the telescope camera are the same type.
+    Parameters
+    ----------
+    telescope_array: list of telescopes classes
+    """
+    tel0 = telescope_array[0]
+    l0 = len(tel0.signal_hist)
+    assert np.all([len(tel.signal_hist) == l0 for tel in telescope_array])
+    stacked_hist = np.zeros(l0)
+    for tel in telescope_array:
+        stacked_hist += tel.signal_hist
+
+    plt.scatter(tel0.pixel_tab[:, 0], tel0.pixel_tab[:, 1], c=stacked_hist)
+    plt.axis('equal')
+    plt.colorbar(label='counts')
 
 
 def display_pointing_tel(tel, show=True):
@@ -73,13 +89,19 @@ def display_pointing_array(alltel):
         display_pointing_tel(tel, show=False)
 
     plt.axis('equal')
-    plt.axis([xmin,xmax,ymin,ymax])
+    plt.axis([xmin, xmax, ymin, ymax])
     plt.show()
 
 
-def plot_cherenkov_cone():
+def plot_array(telescope_array):
     """
-    plot a 3d cherenkov cone given a direction
-    Returns
-    -------
+    Plot a map of the telescopes array
+    Parameters
+    ----------
+    telescope_array: list of telescopes classes
     """
+    for tel in telescope_array:
+        plt.scatter(tel.center[0], tel.center[1])
+        plt.annotate(str(tel.id), (tel.center[0] + 20, tel.center[1] + 20))
+    plt.axis('equal')
+    plt.legend()

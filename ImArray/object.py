@@ -39,84 +39,148 @@ class shower:
         Init
         """
         self.type = "Shower"
-        self.tab = np.array([])
+        self.altitude_first_interaction = 0
+        self.alt = np.deg2rad(70)
+        self.az = 0
+        self.impact_point = [0,0,0]
+        self.energy_primary = 0
+        self.number_of_particles = 10
+        self.array = np.empty((3,self.number_of_particles))
+
+    def linear_segment(self, shower_first_interaction, shower_bot):
+        """
+        Homogeneous repartition of points following a linear segment
+        Parameters
+        ----------
+        shower_first_interaction: 1D Numpy array - position of the first interaction point
+        shower_bot: 1D Numpy array - position of the bottom of the shower
+        """
+        self.array = linear_segment(shower_first_interaction, shower_bot, self.number_of_particles)
+
+
+    def random_surface_sphere(self, shower_center, shower_radius):
+        """
+        Random repartition of points on a sphere surface
+
+        Parameters
+        ----------
+        shower_center: 1D Numpy array
+        shower_radius: float
+        """
+        self.array = random_surface_sphere(shower_center, shower_radius, self.number_of_particles)
+
+
+    def random_surface_ellipsoide(self, shower_center, shower_length, shower_width):
+        self.array = random_surface_ellipsoide(shower_center, shower_length, shower_width, self.number_of_particles)
+
+
+    def random_ellipsoide_alongz(self, shower_center, shower_length, shower_width):
+        """
+
+        Parameters
+        ----------
+        shower_center
+        shower_length
+        shower_width
+        """
+        self.array = random_ellipsoide_alongz(shower_center, shower_length, shower_width, self.number_of_particles)
+
+
+    def shower_rot(self, alt, az):
+        """
+        Rotate the shower
+        Parameters
+        ----------
+        alt: float
+        az: float
+        """
+        self.array = shower_rot(self.array, alt, az)
+
+
+    def plot3d(self):
+        """
+        Make a 3d plot
+        """
+        plot3d(self.array)
+
+
+    def random_ellipsoide(self, shower_top_altitude, shower_length, shower_width):
+        """
+
+        Parameters
+        ----------
+        shower_top_altitude
+        shower_length
+        shower_width
+        """
+        self.array = random_ellipsoide(shower_top_altitude, shower_length, shower_width, \
+                                       self.alt, self.az, self.impact_point, self.number_of_particles)
+
+
+
+
+
 
 
 def linear_segment(shower_top, shower_bot, n):
     """
     Homogeneous repartition of points following a linear segment
-    :param shower_top: array
-    :param shower_bot: array
-    :param n: number of points
-    :return: array of point arrays
-    """
-    top = np.array(shower_top)
-    vec = top - np.array(shower_bot)
-    l = np.linspace(0,1,n)
-    shower = []
-    for i in l:
-        shower.append(top - vec * i)
-    return np.array(shower)
+    Parameters
+    ----------
+    shower_first_interaction: 1D Numpy array - position of the first interaction point
+    shower_bot: 1D Numpy array - position of the bottom of the shower
+    n: int - number of points in shower
 
-
-def linear_segment_2(shower_top, shower_bot, n):
+    Returns
+    -------
+    Numpy array (3,n) - positions of particles in shower
     """
-    Homogeneous repartition of points following a linear segment
-    :param shower_top: array
-    :param shower_bot: array
-    :param n: number of points
-    :return: tuple (X,Y,Z) of the points coordinates
-    """
-    top = np.array(shower_top)
-    vec = top - np.array(shower_bot)
-    l = np.linspace(0,1,n)
-    x = np.empty(n)
-    y = np.empty(n)
-    z = np.empty(n)
-    for idx,i in enumerate(l):
-        point = top - vec * i
-        x[idx] = point[0]
-        y[idx] = point[1]
-        z[idx] = point[2]
-    return (x, y, z)
-
+    vec = shower_bot - shower_top
+    l = np.linspace(0, 1, n)
+    return shower_top + vec * np.array([l ,l ,l]).T
 
 
 def random_surface_sphere(shower_center, shower_radius, n):
     """
     Random repartition of points on a sphere surface
-    :param shower_center: array - center of the sphere
-    :param shower_radius: float - radius of the sphere
-    :param n: number of points
-    :return: list of point arrays
+    Parameters
+    ----------
+    shower_center: 1D Numpy array
+    shower_radius: float
+    n: int - number of particles in shower
+
+    Returns
+    -------
+    Numpy array (3,n) - positions of particles in shower
     """
-    shower = []
-    theta,phi = math.pi * np.random.random_sample(n), 2. * math.pi * np.random.random_sample(n)
+    theta = math.pi * np.random.random_sample(n)
+    phi = 2. * math.pi * np.random.random_sample(n)
     x = shower_center[0] + shower_radius * np.sin(theta) * np.cos(phi)
     y = shower_center[1] + shower_radius * np.sin(theta) * np.sin(phi)
     z = shower_center[2] + shower_radius * np.cos(theta)
-    for i in np.arange(n):
-        shower.append([x[i],y[i],z[i]])
-    return shower
+    return np.array([x,y,z]).T
 
 
 def random_surface_ellipsoide(shower_center, shower_length, shower_width, n):
     """
     Random repartition of points on an ellipsoid surface
-    :param shower_center: array - center of the ellipsoid
-    :param shower_length: float - length of the ellipsoid
-    :param shower_width: float - width of the ellipsoid
-    :param n: int - number of points
-    :return: list of point arrays
+
+    Parameters
+    ----------
+    shower_center: 1D numpy array - position of the center of the sphere
+    shower_length: float
+    shower_width: float
+    n: int - number of particles in shower
+
+    Returns
+    -------
+    Numpy array (3,n) - positions of particles in shower
     """
-    shower = []
     theta,phi = math.pi * np.random.random_sample(n), 2. * math.pi * np.random.random_sample(n)
     x = shower_center[0] + shower_width * np.sin(theta) * np.cos(phi)
     y = shower_center[1] + shower_width * np.sin(theta) * np.sin(phi)
     z = shower_center[2] + shower_length * np.cos(theta)
-    for i in np.arange(n):
-        shower.append([x[i],y[i],z[i]])
-    return shower
+    return np.array([x, y, z]).T
 
 
 def random_ellipsoide_alongz(shower_center, shower_length, shower_width, n):
@@ -132,17 +196,14 @@ def random_ellipsoide_alongz(shower_center, shower_length, shower_width, n):
 
     Returns
     -------
-    list of points forming the shower (3-floats arrays)
+    Numpy array (3,n) - positions of particles in shower
     """
-    shower = []
     theta,phi = math.pi * np.random.random_sample(n), 2. * math.pi * np.random.random_sample(n)
     q,p = shower_length * np.random.random_sample(n), shower_width * np.random.random_sample(n)
     x = shower_center[0] + p/2. * np.sin(theta) * np.cos(phi)
     y = shower_center[1] + p/2. * np.sin(theta) * np.sin(phi)
     z = shower_center[2] + q/2. * np.cos(theta)
-    for i in np.arange(n):
-        shower.append([x[i],y[i],z[i]])
-    return np.array(shower)
+    return np.array([x, y, z]).T
 
 
 def shifted_ellipsoide_v1(shower_center, shower_length, shower_width, n, p, origin_altitude):
@@ -305,6 +366,25 @@ def gaisser_hillas_integral(X, Nmax, Xmax, X1, lam):
     return W * Nmax * gaisser_hillas_reduced_integral(eps, -1, (X-Xmax)/W)
 
 
+def gaisser_hillas_integral_0_inf(Nmax, Xmax, X1, lam):
+    """
+    Analytical integral of the Gaisser-Hillas distribution between 0 and +inf
+    Parameters
+    ----------
+    Nmax: float
+    Xmax: float
+    X1: float
+    lam: float
+
+    Returns
+    -------
+    float
+    """
+    W = Xmax - X1
+    eps = W / lam
+    return Nmax * W * np.exp(eps) * eps**(-1-eps) * ss.gamma(1+eps)
+
+
 def gaisser_hillas_integral_inverse(Y, Nmax, Xmax, X1, lam):
     """
 
@@ -448,6 +528,67 @@ def Get_pos_Gaisser_Hillas(Npart, alt, az, impact_point):
     #return shower_rot(shower, alt, az, impact_point)
 
 
+def radial_distribution(r, R):
+    """
+    radial distribution of particles in a showe
+    Parameters
+    ----------
+    r: float or 1D Numpy array
+    R: float
+
+    Returns
+    -------
+    type(r)
+    """
+    return 2 * r * R ** 2 / (r ** 2 + R ** 2) ** 2
+
+
+def radial_distribution_integral(r_min, r_max, R):
+    """
+    Integral of radial_distribution between r_min and r_max
+    Parameters
+    ----------
+    r_min: float or 1D numpy array
+    r_max: float or 1D numpy array
+    R: float
+
+    Returns
+    -------
+    type(r)
+    """
+    return 1/(1+(x_min/R)**2) - 1/(1+(x_max/R)**2)
+
+
+def radial_distribution_cumulative(r, R):
+    """
+    Cumulative of the radial distribution
+    Parameters
+    ----------
+    r: float or 1D numpy array
+    R: float
+
+    Returns
+    -------
+    type(r)
+    """
+    return f_integral(0, x, R)
+
+
+def radial_distribution_cumulative_inverse(y, R):
+    """
+
+    Parameters
+    ----------
+    y: float or 1D numpy array
+    R: float
+
+    Returns
+    -------
+    type(y)
+    """
+    return R * np.sqrt(y/(1-y))
+
+
 def gaisser_hillas_shower(shower_top_altitude, shower_length, alt, az, impact_point, Npart):
     """
 
@@ -496,43 +637,28 @@ def gaisser_hillas_shower(shower_top_altitude, shower_length, alt, az, impact_po
     # N = gaisser_hillas(f, Nmax, Xmax, X1, lam)
     Nsum = gaisser_hillas_integral(f, Nmax, Xmax, X1, lam)
 
-    max_ngh = gaisser_hillas_integral(f.max(), Nmax, Xmax, X1, lam)
-    Y = random.uniform(0, max_ngh)
-    X = gaisser_hillas_integral_inverse( Nmax, Xmax, X1, lam)
+    Y = np.random.uniform(0, 1, Npart)
+
+    # max_ngh = gaisser_hillas_integral(f.max(), Nmax, Xmax, X1, lam)
+    max_ngh = gaisser_hillas_integral_0_inf(Nmax, Xmax, X1, lam)
+    NZ = gaisser_hillas_integral_inverse(Y * max_ngh, Nmax, Xmax, X1, lam)
+
+    R = 30
+    Y = np.random.uniform(0, 1, Npart)
+    NR = radial_distribution_cumulative_inverse(Y, R)
 
     for k in range(Npart):
-        D = []
-        # yval = random.uniform(0, max(Nsum))
-        # Xinterp.append(np.interp(yval, Nsum, f))
-        for m in range(35):
-            D.append(NKG(0, X, r[m]))
-
-        # Dsum = np.cumsum(D) ### not used
-
-        yval2 = random.uniform(min(D), max(D))
-
-        # dist.append(gcm2distance(np.interp(yval, Nsum, f), math.pi / 2. - alt))
-        dist[k] = gcm2distance(np.interp(yval, Nsum, f), math.pi / 2. - alt)
-
-        # radius.append(np.interp(yval2, r, D))
-        radius[k] = np.interp(yval2, r, D)
-
-        # x.append(radius[k] * np.cos(random.uniform(0, 2 * math.pi)))
-        # y.append(radius[k] * np.sin(random.uniform(0, 2 * math.pi)))
-        # z.append(dist[k])
-        # x[k] = radius[k] * math.cos(random.uniform(0, 2 * math.pi))
-        # y[k] = radius[k] * math.sin(random.uniform(0, 2 * math.pi))
-        # z[k] = dist[k]
-        ### are you sure you don't need the same angle for x and y ???
+        dist[k] = gcm2distance(NZ[k], math.pi / 2. - alt)
 
     angles = np.random.uniform(0, 2. * math.pi, Npart)
-    x = radius * np.cos(angles)
-    y = radius * np.sin(angles)
+    x = NR * np.cos(angles)
+    y = NR * np.sin(angles)
     z = dist
 
+    # shower = np.array([x,y,z])
+    shower = np.empty([Npart,3])
     for i in range(Npart):
-        # shower.append([x[i], y[i], z[i]])
         shower[i] = [x[i], y[i], z[i]]
 
     return shower
-    # return shower_rot(shower, alt, az, impact_point)
+    # return shower_rot(shower, alt, az) + np.array(impact_point)

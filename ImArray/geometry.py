@@ -23,6 +23,7 @@ import numpy as np
 #from math import *
 import math
 import CameraImage as ci
+import vizualisation as viz
 
 DEF = -10000
 
@@ -95,6 +96,13 @@ class Telescope:
         print("normal ", self.normal)
         print("Focale ", self.focale)
         print("Pixel position datafile ", self.pixpos_filename)
+
+
+    def display_camera(self):
+        """
+        Display a plot of the camera image
+        """
+        viz.display_camera_image(self)
 
 
     def pointing_object(self, point):
@@ -782,7 +790,7 @@ def particle_transmission_coefficient(particle_energy, particle_altitude):
 
 def is_particle_visible(particle_position, particle_direction, particle_energy, telescope):
     """
-    Determine if a particle is visible by a telescope.
+    Determine if a particle is visible by a telescope (if the telescope lies in the Cerenkov light cone).
 
     Parameters
     ----------
@@ -807,4 +815,19 @@ def is_particle_visible(particle_position, particle_direction, particle_energy, 
     Tau = particle_transmission_coefficient(particle_energy, particle_position[2])
 
     return (theta_pt < particle_cone_angle(particle_energy)) & (np.random.rand() < Tau)
+
+
+def mask_visible_particles(telescope, shower, shower_direction):
+    """
+    Compute a shower mask of particles visible by the telescope
+    Parameters
+    ----------
+    telescope: telescope class
+    shower: 2D Numpy array (N,3) with N particles
+
+    Returns
+    -------
+    mask = 1D Numpy array of boolean with the same length as the shower array
+    """
+    return np.array([is_particle_visible(particle, shower_direction, 1, telescope) for particle in shower])
 

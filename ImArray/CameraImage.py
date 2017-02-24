@@ -170,7 +170,7 @@ def threshold_pass(pix_signal, threshold):
         return False
 
 
-def shower_camera_image(shower, tel, noise = 0):
+def shower_camera_image(shower, tel, noise = 0, shower_direction=None):
     """
     Given a shower object and a telescope, compute the image of the shower in the camera
     Background noise can be added
@@ -183,7 +183,13 @@ def shower_camera_image(shower, tel, noise = 0):
     -------
     Numpy 1D array of the photon count in each pixel of the telescope camera
     """
-    shower_image = geo.image_shower_pfo(shower, tel)
+    if shower_direction==None:
+        direction = np.array(shower[shower[:, 2].argmin()] - shower[shower[:, 2].argmax()])
+    else:
+        direction = shower_direction
+    direction = direction/np.sqrt((direction**2).sum())
+    visible = geo.mask_visible_particles(tel, shower, direction)
+    shower_image = geo.image_shower_pfo(shower[visible], tel)
     shower_cam = geo.site_to_camera_cartesian(shower_image, tel)
     tel.signal_hist = shower_image_in_camera(tel, shower_cam[:, [0, 1]], noise)
     return tel.signal_hist
