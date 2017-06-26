@@ -101,6 +101,7 @@ def hillas_parameters_1(pix_x, pix_y, image):
     S_xx = m_xx - m_x * m_x
     S_yy = m_yy - m_y * m_y
     S_xy = m_xy - m_x * m_y
+    print(S_xy)
     d = S_yy - S_xx
     temp = d * d + 4 * S_xy * S_xy
     a = (d + np.sqrt(temp)) / (2 * S_xy)
@@ -216,7 +217,7 @@ def hillas_parameters_2(pix_x, pix_y, image):
     return [size,moms[0],moms[1],length,width,rr,phi,psi.value,miss]
 
 # use the 2 version by default
-hillas_parameters = hillas_parameters_2
+hillas_parameters = hillas_parameters_1
 
 """
 def camera_frame_to_R(alt, az):
@@ -234,10 +235,10 @@ def camera_frame_to_R(alt, az):
 def reco_impact_parameter(hillas_parameters_1, alt1, az1, tel1, hillas_parameters_2, alt2, az2, tel2, z=0):
     cen_x1 = hillas_parameters_1[1]
     cen_y1 = hillas_parameters_1[2]
-    psi1 = hillas_parameters_1[7]
+    psi1 = hillas_parameters_1[6]
     cen_x2 = hillas_parameters_2[1]
     cen_y2 = hillas_parameters_2[2]
-    psi2 = hillas_parameters_2[7]
+    psi2 = hillas_parameters_2[6]
 
     barycenter1 = geo.barycenter_in_R(tel1, alt1, az1, cen_x1, cen_y1)
     barycenter2 = geo.barycenter_in_R(tel2, alt2, az2, cen_x2, cen_y2)
@@ -252,16 +253,45 @@ def reco_impact_parameter(hillas_parameters_1, alt1, az1, tel1, hillas_parameter
     return X
 
 
+def reco_impact_parameter_test(hillas_parameters_1, tel1, hillas_parameters_2, tel2, z=0):
+    cen_x1 = hillas_parameters_1[1]
+    cen_y1 = hillas_parameters_1[2]
+    psi1 = hillas_parameters_1[6]
+    cen_x2 = hillas_parameters_2[1]
+    cen_y2 = hillas_parameters_2[2]
+    psi2 = hillas_parameters_2[6]
 
-def impact_parameter_average(alltel, HillasParameters, alt, az):
+    psi1 = hillas_parameters_1[7] + np.pi/2.
+    psi2 = hillas_parameters_2[7] + np.pi/2.
+
+    barycenter1 = geo.barycenter_in_R(tel1, cen_x1, cen_y1)
+    barycenter2 = geo.barycenter_in_R(tel2, cen_x2, cen_y2)
+
+    alt1, az1 = geo.normal_to_altaz(tel1.normal)
+    alt2, az2 = geo.normal_to_altaz(tel2.normal)
+
+    n1 = geo.normal_vector_ellipse_plane_new(psi1, alt1, az1)
+    n2 = geo.normal_vector_ellipse_plane_new(psi2, alt2, az2)
+    n3 = np.array([0, 0, 1])
+
+
+    A = np.array([n1, n2, n3])
+    B = np.array([np.dot(n1, barycenter1), np.dot(n2, barycenter2), z])
+    X = np.linalg.solve(A, B)
+    return X
+
+
+
+
+def impact_parameter_average(alltel, HillasParameters):
     P = []
-    for i in np.arange(len(alltel)):
-        for j in np.arange(len(alltel)):
-            if(j != i):
-                hp1 = HillasParameters[i]
-                hp2 = HillasParameters[j]
-                p = reco_impact_parameter(hp1, alt, az, alltel[i], hp2, alt, az, alltel[j], 0)
-                P.append(p)
+    for i in np.arange(len(alltel)-1):
+        for j in np.arange(i+1, len(alltel)):
+            #if(j != i):
+            hp1 = HillasParameters[i]
+            hp2 = HillasParameters[j]
+            p = reco_impact_parameter_test(hp1, alltel[i], hp2, alltel[j], 0)
+            P.append(p)
     P = np.array(P)
     return [P[:,0].mean(), P[:,1].mean(), P[:,2].mean()]
 
@@ -288,7 +318,7 @@ def coef_hillas_ponderation(hillas_parameters_1, hillas_parameters_2):
     else:
         return fabs(sin(phi1 - phi2)) / ( (1.0/intensity1 + 1.0/intensity2 + width1/length1 + width2/length2) * r);
 
-def impact_parameter_ponderated(alltel, HillasParameters, alt, az):
+def impact_parameter_ponderated(alltel, HillasParameters):
     P = []
     C = []
     for i in np.arange(len(alltel)):
@@ -296,7 +326,7 @@ def impact_parameter_ponderated(alltel, HillasParameters, alt, az):
             if(j != i):
                 hp1 = HillasParameters[i]
                 hp2 = HillasParameters[j]
-                p = reco_impact_parameter(hp1, alt, az, alltel[i], hp2, alt, az, alltel[j], 0)
+                p = reco_impact_parameter_test(hp1, alltel[i], hp2, alltel[j], 0)
                 c = coef_hillas_ponderation(hp1, hp2)
                 P.append(p)
                 r12 = sqrt(hp1[1]**2 + hp1[2]**2)

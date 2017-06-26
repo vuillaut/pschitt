@@ -240,7 +240,9 @@ def site_to_camera_cartesian_old(point, telescope):
 
 def site_to_camera_cartesian(shower, telescope):
     """
-    Same as before but for whole shower
+    Given cartesian coordinates of a point in the site frame,
+    compute the cartesian coordinates in the camera frame
+    This is done for the whole shower at once.
     Parameters
     ----------
     shower
@@ -336,11 +338,11 @@ def camera_base(telescope):
     #     e2 = [0,1,0]
     #e2 = np.cross([0,0,1],telescope.normal)
     #e1 = np.cross(e2,telescope.normal)
-    e2 = my_3d_cross([0,0,1],telescope.normal)
-    e1 = my_3d_cross(e2,telescope.normal)
+    e2 = my_3d_cross([0, 0, 1], telescope.normal)
+    e1 = my_3d_cross(e2, telescope.normal)
     e3 = list(telescope.normal)
     #return [e1/np.linalg.norm(e1),e2/np.linalg.norm(e2),e3/np.linalg.norm(e3)]
-    return [my_normed_vec(e1),my_normed_vec(e2),my_normed_vec(e3)]
+    return [my_normed_vec(e1), my_normed_vec(e2), my_normed_vec(e3)]
 
 
 def my_3d_cross(vec1, vec2):
@@ -370,18 +372,26 @@ def camera_plane(telescope):
 
 def camera_center(telescope):
     """
-    :param telescope: telescope class
-    :return: array - position of the camera center in the site frame
+
+    Parameters
+    ----------
+    telescope: telescope class
+
+    Returns
+    -------
+    1D numpy array - position of the camera center
     """
     return telescope.center + telescope.normal * telescope.focale
 
 
-def plan_focale_image(telescope):
+def image_focale_plan(telescope):
     """
-    :param telescope: telescope class
-    :return: SymPy plane
+
+    Parameters
+    ----------
+    telescope: telescope class
     """
-    return equation_plane(telescope.center-telescope.focale*telescope.normal, telescope.normal)
+    return plane_array(telescope.center-telescope.focale*telescope.normal, telescope.normal)
 
 
 def matrices_inter(point_line1, point_line2, point_plane, normal_plane):
@@ -627,24 +637,45 @@ def camera_ez(alt,az):
 
 
 def camera_frame_base(alt, az):
-    M = np.column_stack((camera_ex(alt,az),camera_ey(alt,az),camera_ez(alt,az)))
+    M = np.column_stack((camera_ex(alt, az), camera_ey(alt, az), camera_ez(alt, az)))
     return np.mat(M)
 
 
-def camera_frame_to_R(tel, alt, az, vector):
+def camera_frame_to_R(tel, vector):
     V = np.matrix(vector).T
+    alt, az = normal_to_altaz(tel.normal)
     M = camera_frame_base(alt, az)
     return (M*V).T.getA()[0] + tel.camera_center
 
 
-def barycenter_in_R(tel, alt, az, cen_x, cen_y):
-    return camera_frame_to_R(tel, alt, az, [cen_x, cen_y, 0])
+def barycenter_in_R(tel, cen_x, cen_y):
+    return camera_frame_to_R(tel, [cen_x, cen_y, 0])
 
 
 def normal_vector_ellipse_plane(psi, alt, az):
     n = [
     math.sin(alt) * math.cos(az) * math.cos(psi) - math.sin(az) * math.sin(psi),
     math.sin(alt) * math.sin(az) * math.cos(psi) + math.cos(az) * math.sin(psi),
+    -math.cos(alt) * math.cos(psi)
+    ]
+    return np.array(n)
+
+
+# def normal_vector_ellipse_plane_test(psi, alt, az):
+#     n = [
+#     -math.sin(psi) * math.cos(alt)**2 * math.sin(az) \
+#         - math.sin(az) * (math.cos(psi)*math.sin(az) + math.sin(psi) * math.sin(alt) * math.cos(az)),
+#     - math.sin(az) * (math.cos(az) * math.cos(psi) - math.sin(psi) * math.sin(alt) * math.sin(az)) \
+#         - math.cos(az) * math.cos(alt)**2 * math.sin(psi),
+#     (math.cos(psi) * math.cos(az) - math.sin(psi) * math.sin(alt) * math.sin(az)) * math.cos(alt) * math.sin(az) \
+#         - (math.cos(psi) * math.sin(az) + math.sin(psi) * math.sin(alt) * math.cos(az)) * math.cos(az) * math.cos(alt)
+#     ]
+#     return np.array(n)
+
+def normal_vector_ellipse_plane_new(psi, alt, az):
+    n = [
+    - math.sin(alt) * math.sin(az) * math.cos(psi) - math.cos(az) * math.sin(psi),
+    math.sin(alt) * math.cos(az) * math.cos(psi) - math.sin(az) * math.sin(psi),
     -math.cos(alt) * math.cos(psi)
     ]
     return np.array(n)
@@ -757,7 +788,7 @@ def telescopes_unicity(tel_list):
     return bool
 
 
-def particle_cone_angle(particle_beta=1, air_index=1):
+def particle_cone_angle(particle_position, particle_beta=1, air_index=1):
     """
     Compute the particle cone angle as a function of its energy
     Parameters
@@ -771,7 +802,10 @@ def particle_cone_angle(particle_beta=1, air_index=1):
     """
     # 0.018 rad ~ 1 deg
     # theta = 1/beta*neta ?
-    return 0.018
+    # angle = 0.018
+    angle = np.radians(0.66 + 4e-5*(1e4-particle_position[2]))
+    angle = 0.06
+    return math.pi * (particle_beta==0) + angle * (particle_beta > 0)
 
 
 def particle_transmission_coefficient(particle_energy, particle_altitude):
@@ -814,7 +848,9 @@ def is_particle_visible(particle_position, particle_direction, particle_energy, 
     #particle emission transmission
     Tau = particle_transmission_coefficient(particle_energy, particle_position[2])
 
-    return (theta_pt < particle_cone_angle(particle_energy)) & (np.random.rand() < Tau)
+    particle_beta = particle_energy
+
+    return (theta_pt < particle_cone_angle(particle_position, particle_beta)) & (np.random.rand() < Tau)
 
 
 def mask_visible_particles(telescope, shower, shower_direction):

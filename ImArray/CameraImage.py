@@ -27,6 +27,9 @@ Functions to compute and display camera images
 import numpy as np
 import geometry as geo
 from numba import jit
+import emission as emi
+from multiprocessing import Pool
+from functools import partial
 
 
 def read_pixel_pos(filename):
@@ -128,7 +131,7 @@ def add_noise_poisson(signal, lam=100):
     return signal
 
 
-def shower_image_in_camera(telescope, photon_pos_tab, lam=0, result_filename=None):
+def shower_image_in_camera(telescope, photon_pos_tab, lam=0, impact_distance=0, result_filename=None):
     """
     Compute the camera image given the positions of the photons in the camera frame.
     Poissonian noise can be added if lambda > 0
@@ -145,6 +148,7 @@ def shower_image_in_camera(telescope, photon_pos_tab, lam=0, result_filename=Non
     Numpy 1D array with the photon count in each pixel
     """
     pixels_signal = photons_to_signal(photon_pos_tab, telescope.pixel_tab)
+    pixels_signal = pixels_signal * emi.emission_coef(impact_distance)
     pixels_signal = add_noise_poisson(pixels_signal, lam)
     if result_filename:
         write_camera_image(pix_hist, result_filename)
@@ -183,15 +187,18 @@ def shower_camera_image(shower, tel, noise = 0, shower_direction=None):
     -------
     Numpy 1D array of the photon count in each pixel of the telescope camera
     """
+
     if shower_direction==None:
-        direction = np.array(shower[shower[:, 2].argmin()] - shower[shower[:, 2].argmax()])
+        direction = np.array(shower.array[shower.array[:, 2].argmin()] - shower.array[shower.array[:, 2].argmax()])
     else:
         direction = shower_direction
     direction = direction/np.sqrt((direction**2).sum())
-    visible = geo.mask_visible_particles(tel, shower, direction)
-    shower_image = geo.image_shower_pfo(shower[visible], tel)
+    visible = geo.mask_visible_particles(tel, shower.array, direction)
+    # visible = np.ones(len(shower), dtype=bool)
+    shower_image = geo.image_shower_pfo(shower.array[visible], tel)
     shower_cam = geo.site_to_camera_cartesian(shower_image, tel)
-    tel.signal_hist = shower_image_in_camera(tel, shower_cam[:, [0, 1]], noise)
+    impact_distance = np.sqrt(np.sum((shower.impact_point - tel.center)**2))
+    tel.signal_hist = shower_image_in_camera(tel, shower_cam[:, [0, 1]], noise, impact_distance=impact_distance)
     return tel.signal_hist
 
 
@@ -206,7 +213,31 @@ def array_shower_imaging(shower, tel_array, noise):
     tel_array: Numpy array or list of telescope classes
     noise: float
     """
+
     for tel in tel_array:
         shower_camera_image(shower, tel, noise)
 
 
+def shower_camera_image_argorder(shower, noise, tel):
+    shower_camera_image(shower, tel, noise)
+    return None
+
+
+def array_shower_imaging_multiproc(shower, tel_array, noise):
+    """
+    TEST
+    Given a shower object and an array of telescopes, compute the image of the shower in each camera
+    Background noise can be added
+    The camera signal is registered in all tel.signal_hist
+    Parameters
+    ----------
+    shower: 3D Numpy array with a list of space position points composing the shower
+    tel_array: Numpy array or list of telescope classes
+    noise: float
+    """
+
+    pool = Pool(processes=4)
+    func = partial(shower_camera_image_argorder, shower, noise)
+    pool.map(func, tel_array)
+    pool.close()
+    pool.join()

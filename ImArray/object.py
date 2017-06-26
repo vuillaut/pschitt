@@ -86,6 +86,31 @@ class shower:
         self.array = random_ellipsoide_alongz(shower_center, shower_length, shower_width, self.number_of_particles)
 
 
+    def gaussian_ellipsoide_alongz(self, shower_center, shower_length, shower_width):
+        """
+
+        Parameters
+        ----------
+        shower_center
+        shower_length
+        shower_width
+        """
+        self.array = gaussian_ellipsoide_alongz(shower_center, shower_length, shower_width, self.number_of_particles)
+
+
+    def gaussian_ellipsoide(self, shower_top_altitude, shower_length, shower_width):
+        """
+
+        Parameters
+        ----------
+        shower_top_altitude
+        shower_length
+        shower_width
+        """
+        self.array = gaussian_ellipsoide(shower_top_altitude, shower_length, shower_width, \
+                                         self.alt, self.az, self.impact_point, self.number_of_particles)
+
+
     def shower_rot(self, alt, az):
         """
         Rotate the shower
@@ -198,12 +223,58 @@ def random_ellipsoide_alongz(shower_center, shower_length, shower_width, n):
     -------
     Numpy array (3,n) - positions of particles in shower
     """
-    theta,phi = math.pi * np.random.random_sample(n), 2. * math.pi * np.random.random_sample(n)
-    q,p = shower_length * np.random.random_sample(n), shower_width * np.random.random_sample(n)
+    theta, phi = math.pi * np.random.random_sample(n), 2. * math.pi * np.random.random_sample(n)
+    q, p = shower_length * np.random.random_sample(n), shower_width * np.random.random_sample(n)
     x = shower_center[0] + p/2. * np.sin(theta) * np.cos(phi)
     y = shower_center[1] + p/2. * np.sin(theta) * np.sin(phi)
     z = shower_center[2] + q/2. * np.cos(theta)
     return np.array([x, y, z]).T
+
+
+def gaussian_ellipsoide_alongz(shower_center, shower_length, shower_width, n):
+    """
+    Gaussian repartition of points in an ellipsoid aligned with the Z axis
+    Shower length and width correspond to 3 sigma of the gaussian
+
+    Parameters
+    ----------
+    shower_center: position in space of the ellipsoid center
+    shower_length: length of the ellipsoid = float
+    shower_width: width of the ellipsoid = float
+    n: number of points forming the shower = int
+
+    Returns
+    -------
+    Numpy array (3,n) - positions of particles in shower
+    """
+    theta, phi = math.pi * np.random.random_sample(n), 2. * math.pi * np.random.random_sample(n)
+    q, p = np.random.normal(shower_center[2], shower_length/5., n), np.random.normal(0, shower_width/5., n)
+    x = shower_center[0] + p/2. * np.sin(theta) * np.cos(phi)
+    y = shower_center[1] + p/2. * np.sin(theta) * np.sin(phi)
+    z = shower_center[2] + q/2. * np.cos(theta)
+    return np.array([x, y, z]).T
+
+
+def gaussian_ellipsoide(shower_top_altitude, shower_length, shower_width, alt, az, impact_point, n):
+    """
+    N random points following a gaussian repartition in an ellipsoid. The ellipsoid comes from direction (alt,az) and goes through impact_point
+    Parameters
+    ----------
+    shower_top_altitude: position of the first interaction point = 3-floats array
+    shower_length: length of the ellipsoide = float
+    shower_width: width of the ellipsoide = float
+    alt: altitude angle of the shower
+    az: azimuthal angle of the shower
+    impact_point: point on the shower axis
+    n: number of points forming the shower
+
+    Returns
+    -------
+    list of points in the shower (3-floats arrays)
+    """
+    shower_center = [0, 0, shower_top_altitude - shower_length/2.]
+    shower = gaussian_ellipsoide_alongz(shower_center, shower_length, shower_width, n)
+    return shower_rot(shower, alt, az) + np.array(impact_point)
 
 
 def shifted_ellipsoide_v1(shower_center, shower_length, shower_width, n, p, origin_altitude):
@@ -227,6 +298,7 @@ def shifted_ellipsoide_v1(shower_center, shower_length, shower_width, n, p, orig
         point[0] += p[0]*(- point[2]/origin_altitude + 1.0)
         point[1] += p[1]*(- point[2]/origin_altitude + 1.0)
     return shower
+
 
 def plot3d(shower):
     """

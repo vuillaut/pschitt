@@ -1,26 +1,40 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import mpl_toolkits.mplot3d.art3d as art3d
+from scipy import stats
 
 
-def plot_shower3d(shower,alltel):
+def plot_shower3d(shower, alltel, density_color=True):
     """
     Display the sky object (shower) and the telescope in a 3D representation
     Parameters
     ----------
     shower: array of points (arrays [x,y,z])
     alltel: array of telescopes (telescope class)
+    density_color: boolean to use density for particles color. Set False to speed-up plotting.
     """
-    fig = plt.figure()
+    fig = plt.figure(figsize=(12,12))
     ax = fig.add_subplot(111, projection='3d')
-    ax.scatter(shower[:,0] , shower[:,1], shower[:,2], c='r', marker='o')
     for tel in alltel:
-        p = plt.Circle((tel.center[0],tel.center[1]), 30)
+        p = plt.Circle((tel.center[0],tel.center[1]), 30, color='black')
         ax.add_patch(p)
         art3d.pathpatch_2d_to_3d(p, z=tel.center[2], zdir='z')
+
+    values = shower.T
+
+    if density_color:
+        kde = stats.gaussian_kde(values)
+        density = kde(values)
+        ax.scatter(values[0] , values[1], values[2], marker='o', c=density)
+    else:
+        ax.scatter(values[0] , values[1], values[2], marker='o')
+
     plt.axis([-1000, 1000, -1000, 1000])
+    ax.set_xlabel("[m]")
+    ax.set_zlabel("altitude [m]")
+    plt.legend()
     #plt.axis('equal')
-    plt.show()
+    #plt.show()
 
 
 def display_camera_image(telescope):
@@ -105,3 +119,5 @@ def plot_array(telescope_array):
         plt.annotate(str(tel.id), (tel.center[0] + 20, tel.center[1] + 20))
     plt.axis('equal')
     plt.legend()
+    plt.xlabel("x [m]")
+    plt.ylabel("y [m]")
