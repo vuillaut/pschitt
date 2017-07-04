@@ -20,7 +20,11 @@ def plot_shower3d(shower, alltel, density_color=True):
         ax.add_patch(p)
         art3d.pathpatch_2d_to_3d(p, z=tel.center[2], zdir='z')
 
-    values = shower.T
+    ip = plt.Circle((shower.impact_point[0], shower.impact_point[1]), 15, color='red')
+    ax.add_patch(ip)
+    art3d.pathpatch_2d_to_3d(ip, z=tel.center[2], zdir='z')
+
+    values = shower.array.T
 
     if density_color:
         kde = stats.gaussian_kde(values)
