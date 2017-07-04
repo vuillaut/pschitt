@@ -76,12 +76,18 @@ class shower:
 
     def random_ellipsoide_alongz(self, shower_center, shower_length, shower_width):
         """
+        Random repartition of points in an ellipsoid aligned with the Z axis
 
         Parameters
         ----------
-        shower_center
-        shower_length
-        shower_width
+        shower_center: position in space of the ellipsoid center
+        shower_length: length of the ellipsoid = float
+        shower_width: width of the ellipsoid = float
+        n: number of points forming the shower = int
+
+        Returns
+        -------
+        Numpy array (3,n) - positions of particles in shower
         """
         self.array = random_ellipsoide_alongz(shower_center, shower_length, shower_width, self.number_of_particles)
 
@@ -131,12 +137,20 @@ class shower:
 
     def random_ellipsoide(self, shower_top_altitude, shower_length, shower_width):
         """
-
+        Compute a list of N random points in an ellipsoid. The ellipsoid comes from direction (alt,az) and goes through impact_point
         Parameters
         ----------
-        shower_top_altitude
-        shower_length
-        shower_width
+        shower_top_altitude: position of the first interaction point = 3-floats array
+        shower_length: length of the ellipsoide = float
+        shower_width: width of the ellipsoide = float
+        alt: altitude angle of the shower
+        az: azimuthal angle of the shower
+        impact_point: point on the shower axis
+        n: number of points forming the shower
+
+        Returns
+        -------
+        list of points in the shower (3-floats arrays)
         """
         self.array = random_ellipsoide(shower_top_altitude, shower_length, shower_width, \
                                        self.alt, self.az, self.impact_point, self.number_of_particles)
@@ -247,11 +261,10 @@ def gaussian_ellipsoide_alongz(shower_center, shower_length, shower_width, n):
     -------
     Numpy array (3,n) - positions of particles in shower
     """
-    theta, phi = math.pi * np.random.random_sample(n), 2. * math.pi * np.random.random_sample(n)
-    q, p = np.random.normal(shower_center[2], shower_length/5., n), np.random.normal(0, shower_width/5., n)
-    x = shower_center[0] + p/2. * np.sin(theta) * np.cos(phi)
-    y = shower_center[1] + p/2. * np.sin(theta) * np.sin(phi)
-    z = shower_center[2] + q/2. * np.cos(theta)
+    x = np.random.normal(shower_center[0], shower_width / 5., n)
+    y = np.random.normal(shower_center[1], shower_width / 5., n)
+    z = np.random.normal(shower_center[2], shower_length / 5., n)
+
     return np.array([x, y, z]).T
 
 
