@@ -1,4 +1,4 @@
-ImArray is a software to image an object in the sky by an array of ground Telescopes.
+pschitt! is a software to image an object in the sky by an array of ground Telescopes.
 
 It has been developed to run simple tests on Cherenkov reconstruction analysis.
 Up to now, the simulated objects are very simples - the most elegant one is an ellipsoid representing an electromagnetic shower.
