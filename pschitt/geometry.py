@@ -52,10 +52,10 @@ class Telescope:
     Class describing the telescope and its camera
     """
     id = 0
-    def __init__(self, mirror, normal, camera_type):
+    def __init__(self, mirror_center, normal, camera_type):
         Telescope.id += 1
         self.id = Telescope.id
-        self.ground_pos = np.array(mirror_center)
+        self.mirror_center = np.array(mirror_center)
         self.normal = np.array(normal)/np.linalg.norm(normal)
         self.camera_type = camera_type
         self.pixpos_filename = "data/PosPixel_{0}.txt".format(camera_type)
@@ -642,6 +642,17 @@ def camera_frame_base(alt, az):
 
 
 def camera_frame_to_R(tel, vector):
+    """
+    Frame transformation from the camera frame to the site frame
+    Parameters
+    ----------
+    tel: telescope class
+    vector: 1D numpy array - point position in the camera frame
+
+    Returns
+    -------
+    1D Numpy array - position in space in the site frame
+    """
     V = np.matrix(vector).T
     alt, az = normal_to_altaz(tel.normal)
     M = camera_frame_base(alt, az)
@@ -673,16 +684,6 @@ def normal_vector_ellipse_plane(psi, alt, az):
     return np.array(n)
 
 
-# def normal_vector_ellipse_plane_test(psi, alt, az):
-#     n = [
-#     -math.sin(psi) * math.cos(alt)**2 * math.sin(az) \
-#         - math.sin(az) * (math.cos(psi)*math.sin(az) + math.sin(psi) * math.sin(alt) * math.cos(az)),
-#     - math.sin(az) * (math.cos(az) * math.cos(psi) - math.sin(psi) * math.sin(alt) * math.sin(az)) \
-#         - math.cos(az) * math.cos(alt)**2 * math.sin(psi),
-#     (math.cos(psi) * math.cos(az) - math.sin(psi) * math.sin(alt) * math.sin(az)) * math.cos(alt) * math.sin(az) \
-#         - (math.cos(psi) * math.sin(az) + math.sin(psi) * math.sin(alt) * math.cos(az)) * math.cos(az) * math.cos(alt)
-#     ]
-#     return np.array(n)
 
 def normal_vector_ellipse_plane_new(psi, alt, az):
     n = [

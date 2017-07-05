@@ -197,7 +197,7 @@ def shower_camera_image(shower, tel, noise = 0, shower_direction=None):
     # visible = np.ones(len(shower), dtype=bool)
     shower_image = geo.image_shower_pfo(shower.array[visible], tel)
     shower_cam = geo.site_to_camera_cartesian(shower_image, tel)
-    impact_distance = np.sqrt(np.sum((shower.impact_point - tel.center)**2))
+    impact_distance = np.sqrt(np.sum((shower.impact_point - tel.mirror_center)**2))
     tel.signal_hist = shower_image_in_camera(tel, shower_cam[:, [0, 1]], noise, impact_distance=impact_distance)
     return tel.signal_hist
 

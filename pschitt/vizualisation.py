@@ -16,13 +16,13 @@ def plot_shower3d(shower, alltel, density_color=True):
     fig = plt.figure(figsize=(12,12))
     ax = fig.add_subplot(111, projection='3d')
     for tel in alltel:
-        p = plt.Circle((tel.center[0],tel.center[1]), 30, color='black')
+        p = plt.Circle((tel.mirror_center[0],tel.mirror_center[1]), 30, color='black')
         ax.add_patch(p)
-        art3d.pathpatch_2d_to_3d(p, z=tel.center[2], zdir='z')
+        art3d.pathpatch_2d_to_3d(p, z=tel.mirror_center[2], zdir='z')
 
     ip = plt.Circle((shower.impact_point[0], shower.impact_point[1]), 15, color='red')
     ax.add_patch(ip)
-    art3d.pathpatch_2d_to_3d(ip, z=tel.center[2], zdir='z')
+    art3d.pathpatch_2d_to_3d(ip, z=tel.mirror_center[2], zdir='z')
 
     values = shower.array.T
 
@@ -97,7 +97,7 @@ def display_pointing_array(alltel):
     ----------
     alltel: list of telescope classes
     """
-    centers = np.array([tel.center for tel in alltel])
+    centers = np.array([tel.mirror_center for tel in alltel])
     xmin = centers[:,0].min() - 50
     xmax = centers[:,0].max() + 50
     ymin = centers[:,1].min() - 50
@@ -119,8 +119,8 @@ def plot_array(telescope_array):
     telescope_array: list of telescopes classes
     """
     for tel in telescope_array:
-        plt.scatter(tel.center[0], tel.center[1])
-        plt.annotate(str(tel.id), (tel.center[0] + 20, tel.center[1] + 20))
+        plt.scatter(tel.mirror_center[0], tel.mirror_center[1])
+        plt.annotate(str(tel.id), (tel.mirror_center[0] + 20, tel.mirror_center[1] + 20))
     plt.axis('equal')
     plt.legend()
     plt.xlabel("x [m]")
