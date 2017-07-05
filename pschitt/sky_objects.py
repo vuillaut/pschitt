@@ -3,11 +3,10 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-from .import geometry as geo
+from . import geometry as geo
 import math
 import random
 import scipy.special as ss
-import scipy.integrate as si
 
 
 

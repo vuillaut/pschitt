@@ -13,7 +13,7 @@ import numpy as np
 from astropy.units import Quantity
 from collections import namedtuple
 import astropy.units as u
-from .import geometry as geo
+from . import geometry as geo
 from math import *
 
 

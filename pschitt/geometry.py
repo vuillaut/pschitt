@@ -4,7 +4,7 @@
 
 import numpy as np
 import math
-from . import CameraImage as ci
+from . import camera_image as ci
 from . import vizualisation as viz
 
 DEF = -10000
