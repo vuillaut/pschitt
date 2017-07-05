@@ -52,10 +52,10 @@ class Telescope:
     Class describing the telescope and its camera
     """
     id = 0
-    def __init__(self, center, normal, camera_type):
+    def __init__(self, mirror, normal, camera_type):
         Telescope.id += 1
         self.id = Telescope.id
-        self.center = np.array(center)
+        self.ground_pos = np.array(mirror_center)
         self.normal = np.array(normal)/np.linalg.norm(normal)
         self.camera_type = camera_type
         self.pixpos_filename = "data/PosPixel_{0}.txt".format(camera_type)
@@ -82,7 +82,7 @@ class Telescope:
             #self.camera_size = LST_RADIUS
             self.focale = LST_FOCALE
 
-        self.camera_center = self.center + self.normal * self.focale
+        self.camera_center = self.mirror_center + self.normal * self.focale
         self.camera_size = math.sqrt((self.pixel_tab[0]**2 +self.pixel_tab[0]**2).max())
 
 
@@ -92,7 +92,7 @@ class Telescope:
         print("Telescope number ", self.id)
         print("Type ", self.type)
         print("Camera type:", self.camera_type)
-        print("Center ", self.center)
+        print("Center ", self.mirror_center)
         print("normal ", self.normal)
         print("Focale ", self.focale)
         print("Pixel position datafile ", self.pixpos_filename)
@@ -381,7 +381,7 @@ def camera_center(telescope):
     -------
     1D numpy array - position of the camera center
     """
-    return telescope.center + telescope.normal * telescope.focale
+    return telescope.mirror_center + telescope.normal * telescope.focale
 
 
 def image_focale_plan(telescope):
@@ -391,7 +391,7 @@ def image_focale_plan(telescope):
     ----------
     telescope: telescope class
     """
-    return plane_array(telescope.center-telescope.focale*telescope.normal, telescope.normal)
+    return plane_array(telescope.mirror_center-telescope.focale*telescope.normal, telescope.normal)
 
 
 def matrices_inter(point_line1, point_line2, point_plane, normal_plane):
@@ -429,7 +429,7 @@ def image_point_pfi_old(point, telescope):
     -------
     3-floats Numpy array
     """
-    a, b = matrices_inter(np.array(point), telescope.center, telescope.center-telescope.focale*telescope.normal, telescope.normal)
+    a, b = matrices_inter(np.array(point), telescope.mirror_center, telescope.mirror_center-telescope.focale*telescope.normal, telescope.normal)
     inter = np.linalg.solve(a,b)
     return inter
 
@@ -446,8 +446,8 @@ def image_point_pfi(point, telescope):
     -------
     3-floats Numpy array
     """
-    e = (telescope.center - point) / np.linalg.norm(telescope.center - point)
-    I = telescope.center + telescope.focale/(np.dot(telescope.normal, -e)) * e
+    e = (telescope.mirror_center - point) / np.linalg.norm(telescope.mirror_center - point)
+    I = telescope.mirror_center + telescope.focale/(np.dot(telescope.normal, -e)) * e
     return I
 
 
@@ -463,11 +463,11 @@ def image_shower_pfi(shower, telescope):
     -------
     list of points coordinates [X,Y,Z] of the shower image
     """
-    e = (telescope.center - shower)
-    norm = np.linalg.norm(telescope.center - shower, axis=1, keepdims=True)
+    e = (telescope.mirror_center - shower)
+    norm = np.linalg.norm(telescope.mirror_center - shower, axis=1, keepdims=True)
     e = e / norm
     theta = e.dot(-telescope.normal)[np.newaxis].T
-    I = telescope.center + telescope.focale/theta * e
+    I = telescope.mirror_center + telescope.focale/theta * e
     return I
 
 
@@ -488,10 +488,10 @@ def image_shower_pfi_old(shower, telescope):
     -------
     list of points coordinates [X,Y,Z] of the shower image
     """
-    #ex = (telescope.center - shower[0]) / np.linalg.norm(telescope.center - point)
-    ex = (telescope.center[0] - shower[0])
-    ey = (telescope.center[1] - shower[1])
-    ez = (telescope.center[2] - shower[2])
+    #ex = (telescope.mirror_center - shower[0]) / np.linalg.norm(telescope.mirror_center - point)
+    ex = (telescope.mirror_center[0] - shower[0])
+    ey = (telescope.mirror_center[1] - shower[1])
+    ez = (telescope.mirror_center[2] - shower[2])
     norm = np.sqrt(ex**2 + ey**2 + ez**2)
 
     ex = ex/norm
@@ -500,9 +500,9 @@ def image_shower_pfi_old(shower, telescope):
 
     theta = -( telescope.normal[0] * ex + telescope.normal[1] * ey + telescope.normal[2] * ez)
 
-    ix = telescope.center[0] + (telescope.focale / theta) * ex
-    iy = telescope.center[1] + (telescope.focale / theta) * ey
-    iz = telescope.center[2] + (telescope.focale / theta) * ez
+    ix = telescope.mirror_center[0] + (telescope.focale / theta) * ex
+    iy = telescope.mirror_center[1] + (telescope.focale / theta) * ey
+    iz = telescope.mirror_center[2] + (telescope.focale / theta) * ez
 
     return ix, iy, iz
 
@@ -581,7 +581,7 @@ def load_telescopes_flatfloor(filename, normal = [0,0,1]):
             teltype = "sst"
         tel = Telescope([float(t[0]),float(t[1]),0],normal,teltype)
         #for tel1 in tels:
-        #    if not ((tel1.center==tel.center).all() and tel1.id==tel.id):
+        #    if not ((tel1.mirror_center==tel.mirror_center).all() and tel1.id==tel.id):
         tels.append(tel)
     print(len(tels), " telescopes loaded")
     return tels
@@ -649,6 +649,18 @@ def camera_frame_to_R(tel, vector):
 
 
 def barycenter_in_R(tel, cen_x, cen_y):
+    """
+    Compute the position of the signal barycenter in the site frame
+    Parameters
+    ----------
+    tel: telescope
+    cen_x: barycenter x in camera frame
+    cen_y: barycenter y in camera frame
+
+    Returns
+    -------
+    1D numpy array - position of the barycenter in space
+    """
     return camera_frame_to_R(tel, [cen_x, cen_y, 0])
 
 
@@ -782,8 +794,8 @@ def telescopes_unicity(tel_list):
     bool = True
     for tel1 in tel_list:
         for tel2 in tel_list:
-            if ((tel1.center == tel2.center).all() and tel1.id != tel2.id):
-                print("Telescopes {0} and {1} are both at the same position {3}".format(tel1.id, tel2.id, tel1.center))
+            if ((tel1.mirror_center == tel2.mirror_center).all() and tel1.id != tel2.id):
+                print("Telescopes {0} and {1} are both at the same position {3}".format(tel1.id, tel2.id, tel1.mirror_center))
                 bool = False
     return bool
 
