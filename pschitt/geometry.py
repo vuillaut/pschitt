@@ -1,29 +1,11 @@
-"""
-ImArray is a software to image an object in the sky by an array of ground Telescopes
-Copyright (C) 2016  Thomas Vuillaume
 
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>
-
-The author may be contacted @
-thomas.vuillaume@lapp.in2p3.fr
-"""
 
 import numpy as np
-#from math import *
 import math
-import CameraImage as ci
-import vizualisation as viz
+from . import CameraImage as ci
+from . import vizualisation as viz
 
 DEF = -10000
 
@@ -879,4 +861,3 @@ def mask_visible_particles(telescope, shower, shower_direction):
     mask = 1D Numpy array of boolean with the same length as the shower array
     """
     return np.array([is_particle_visible(particle, shower_direction, 1, telescope) for particle in shower])
-

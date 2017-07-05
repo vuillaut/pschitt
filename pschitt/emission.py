@@ -1,5 +1,4 @@
-import numpy as np
-
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 
 
 def emission_coef(distance_impact):

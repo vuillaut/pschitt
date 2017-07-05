@@ -1,5 +1,3 @@
-# Hillas functions copied from CTAPIPE https://github.com/cta-observatory/ctapipe/blob/master/ctapipe/reco/hillas.py
-
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 
 """Hillas shower parametrization.
@@ -15,7 +13,7 @@ import numpy as np
 from astropy.units import Quantity
 from collections import namedtuple
 import astropy.units as u
-import geometry as geo
+from .import geometry as geo
 from math import *
 
 
