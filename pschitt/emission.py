@@ -2,7 +2,6 @@ import numpy as np
 
 
 
-
 def emission_coef(distance_impact):
     """
     Compute a coefficient between 0 and 1 taking into accounts all radiative transfer effects
