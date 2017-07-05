@@ -9,13 +9,10 @@ from . import vizualisation as viz
 
 DEF = -10000
 
-#Camera sizes in meters
-#LST_RADIUS = 1
-#MST_RADIUS = 1
-#SST_RADIUS = 0.5
-LST_FOCALE = 16
-MST_FOCALE = 10
-SST_FOCALE = 5
+
+LST_FOCAL = 16
+MST_FOCAL = 10
+SST_FOCAL = 5
 
 '''
 Camera Types
@@ -34,38 +31,93 @@ class Telescope:
     Class describing the telescope and its camera
     """
     id = 0
-    def __init__(self, mirror_center, normal, camera_type):
+    def __init__(self, mirror_center, normal, camera_type='default'):
         Telescope.id += 1
         self.id = Telescope.id
         self.mirror_center = np.array(mirror_center)
         self.normal = np.array(normal)/np.linalg.norm(normal)
-        self.camera_type = camera_type
-        self.pixpos_filename = "data/PosPixel_{0}.txt".format(camera_type)
+        self.set_camera(camera_type)
+        self.camera_center = self.mirror_center + self.normal * self.focal
+        self.camera_size = math.sqrt((self.pixel_tab[0]**2 +self.pixel_tab[0]**2).max())
+        self.signal_hist = np.zeros(len(self.pixel_tab[0]))
+
+    def set_pixel_pos_from_file(self):
         try:
             self.pixel_tab = ci.read_pixel_pos(self.pixpos_filename)
         except:
-            print("The file {0} desired for the telescope {1} camera's pixels positions does not exist !" \
+            print("Cannot load the file {0}" \
             "A standard array of pixel positions will be used instead".format(self.pixpos_filename, Telescope.id))
-            self.pixel_tab = np.array([[-0.05, 0], [0, 0], [0, 0.05], [-0.05, -0.05], [0.05, 0.05],
-                                       [0, -0.05], [0.05, 0], [-0.05, 0.05], [0.05, -0.05]])
             self.pixpos_filename = None
-        self.signal_hist = np.zeros(len(self.pixel_tab[0]))
+            self.set_default_cam()
 
-        if(camera_type>3):
+    def set_default_cam(self):
+        """
+        set default square camera. 50x50 = 2500 pixels. 1m side length. 10m focal
+        """
+        self.camera_type = 'default'
+        X, Y = np.mgrid[-1:1:50j, -1:1:50j]
+        self.pixel_tab = (np.vstack([X.ravel(), Y.ravel()])).T
+        self.focal = 10
+
+    def set_camera(self, camera_type):
+        """
+        set the camera parameters from camera_type
+        Parameters
+        ----------
+        camera_type: string. Support camera types:
+        'square', 'astri', 'gct', 'dc', 'sct', 'nectar', 'flash','lst_cam'
+        """
+        self.camera_type = camera_type
+
+        if camera_type == 'default':
+            self.set_default_cam()
+
+        elif camera_type == 'astri':
+            self.type = "sst"
+            self.focal = SST_FOCAL
+            self.pixpos_filename = 'share/cameras/PosPixel_0.txt'
+            self.set_pixel_pos_from_file()
+
+        elif camera_type == 'gct':
             self.type="sst"
-            #self.camera_size = SST_RADIUS   ## camera size is now given by the pixels positions
-            self.focale = SST_FOCALE
-        elif(camera_type>0):
-            self.type="mst"
-            #self.camera_size = MST_RADIUS
-            self.focale = MST_FOCALE
-        else:
-            self.type="lst"
-            #self.camera_size = LST_RADIUS
-            self.focale = LST_FOCALE
+            self.focal = SST_FOCAL
+            self.pixpos_filename = 'share/cameras/PosPixel_0.txt'
+            self.set_pixel_pos_from_file()
 
-        self.camera_center = self.mirror_center + self.normal * self.focale
-        self.camera_size = math.sqrt((self.pixel_tab[0]**2 +self.pixel_tab[0]**2).max())
+        elif camera_type == 'dc':
+            self.type="sst"
+            self.focal = SST_FOCAL
+            self.pixpos_filename = 'share/cameras/PosPixel_0.txt'
+            self.set_pixel_pos_from_file()
+
+        elif camera_type == 'sct':
+            self.type="mst"
+            self.focal = MST_FOCAL
+            self.pixpos_filename = 'share/cameras/PosPixel_0.txt'
+            self.set_pixel_pos_from_file()
+
+        elif camera_type == 'nectar':
+            self.type="mst"
+            self.focal = MST_FOCAL
+            self.pixpos_filename = 'share/cameras/PosPixel_0.txt'
+            self.set_pixel_pos_from_file()
+
+        elif camera_type == 'flash':
+            self.type="mst"
+            self.focal = MST_FOCAL
+            self.pixpos_filename = 'share/cameras/PosPixel_0.txt'
+            self.set_pixel_pos_from_file()
+
+        elif camera_type == 'lst_cam':
+            self.type="lst"
+            self.focal = LST_FOCAL
+            self.pixpos_filename = 'share/cameras/PosPixel_0.txt'
+            self.set_pixel_pos_from_file()
+
+        else:
+            print("The camera type {0} is not recognised. A square camera will be set by default.")
+            self.camera_type = 'default'
+            self.set_default_cam()
 
 
     def display_info(self):
@@ -73,10 +125,10 @@ class Telescope:
         print('')
         print("Telescope number ", self.id)
         print("Type ", self.type)
-        print("Camera type:", self.camera_type)
-        print("Center ", self.mirror_center)
+        print("Camera type: ", self.camera_type)
+        print("Mirror Center: ", self.mirror_center)
         print("normal ", self.normal)
-        print("Focale ", self.focale)
+        print("focal ", self.focal)
         print("Pixel position datafile ", self.pixpos_filename)
 
 
@@ -363,17 +415,17 @@ def camera_center(telescope):
     -------
     1D numpy array - position of the camera center
     """
-    return telescope.mirror_center + telescope.normal * telescope.focale
+    return telescope.mirror_center + telescope.normal * telescope.focal
 
 
-def image_focale_plan(telescope):
+def image_FOCAL_plan(telescope):
     """
 
     Parameters
     ----------
     telescope: telescope class
     """
-    return plane_array(telescope.mirror_center-telescope.focale*telescope.normal, telescope.normal)
+    return plane_array(telescope.mirror_center-telescope.focal*telescope.normal, telescope.normal)
 
 
 def matrices_inter(point_line1, point_line2, point_plane, normal_plane):
@@ -411,7 +463,7 @@ def image_point_pfi_old(point, telescope):
     -------
     3-floats Numpy array
     """
-    a, b = matrices_inter(np.array(point), telescope.mirror_center, telescope.mirror_center-telescope.focale*telescope.normal, telescope.normal)
+    a, b = matrices_inter(np.array(point), telescope.mirror_center, telescope.mirror_center-telescope.focal*telescope.normal, telescope.normal)
     inter = np.linalg.solve(a,b)
     return inter
 
@@ -429,7 +481,7 @@ def image_point_pfi(point, telescope):
     3-floats Numpy array
     """
     e = (telescope.mirror_center - point) / np.linalg.norm(telescope.mirror_center - point)
-    I = telescope.mirror_center + telescope.focale/(np.dot(telescope.normal, -e)) * e
+    I = telescope.mirror_center + telescope.focal/(np.dot(telescope.normal, -e)) * e
     return I
 
 
@@ -449,13 +501,13 @@ def image_shower_pfi(shower, telescope):
     norm = np.linalg.norm(telescope.mirror_center - shower, axis=1, keepdims=True)
     e = e / norm
     theta = e.dot(-telescope.normal)[np.newaxis].T
-    I = telescope.mirror_center + telescope.focale/theta * e
+    I = telescope.mirror_center + telescope.focal/theta * e
     return I
 
 
 def image_shower_pfo(shower, telescope):
     image_pfi = image_shower_pfi(shower, telescope)
-    return image_pfi + 2.0 * telescope.focale * telescope.normal
+    return image_pfi + 2.0 * telescope.focal * telescope.normal
 
 
 def image_shower_pfi_old(shower, telescope):
@@ -482,9 +534,9 @@ def image_shower_pfi_old(shower, telescope):
 
     theta = -( telescope.normal[0] * ex + telescope.normal[1] * ey + telescope.normal[2] * ez)
 
-    ix = telescope.mirror_center[0] + (telescope.focale / theta) * ex
-    iy = telescope.mirror_center[1] + (telescope.focale / theta) * ey
-    iz = telescope.mirror_center[2] + (telescope.focale / theta) * ez
+    ix = telescope.mirror_center[0] + (telescope.focal / theta) * ex
+    iy = telescope.mirror_center[1] + (telescope.focal / theta) * ey
+    iz = telescope.mirror_center[2] + (telescope.focal / theta) * ez
 
     return ix, iy, iz
 
@@ -502,9 +554,9 @@ def image_shower_pfo_old(shower, telescope):
     list of points coordinates [X,Y,Z] of the shower image
     """
     ix, iy, iz = image_shower_pfi(shower, telescope)
-    ix += 2.0 * telescope.focale * telescope.normal[0]
-    iy += 2.0 * telescope.focale * telescope.normal[1]
-    iz += 2.0 * telescope.focale * telescope.normal[2]
+    ix += 2.0 * telescope.focal * telescope.normal[0]
+    iy += 2.0 * telescope.focal * telescope.normal[1]
+    iz += 2.0 * telescope.focal * telescope.normal[2]
     return ix, iy, iz
 
 
@@ -516,7 +568,7 @@ def image_point_pfo(point, telescope):
     :return: 3-floats array
     """
     image_pfi = image_point_pfi(point, telescope)
-    return image_pfi + 2.0 * telescope.focale * telescope.normal
+    return image_pfi + 2.0 * telescope.focal * telescope.normal
 
 
 def load_telescopes(filename, normal = [0,0,1]):
@@ -555,11 +607,11 @@ def load_telescopes_flatfloor(filename, normal = [0,0,1]):
         read_data = f.readlines()
     for line in read_data:
         t = line.split()
-        if(float(t[2])==LST_FOCALE):
+        if(float(t[2])==LST_FOCAL):
             teltype = "lst"
-        elif(float(t[2])==MST_FOCALE):
+        elif(float(t[2])==MST_FOCAL):
             teltype = "mst"
-        elif(float(t[2])==SST_FOCALE):
+        elif(float(t[2])==SST_FOCAL):
             teltype = "sst"
         tel = Telescope([float(t[0]),float(t[1]),0],normal,teltype)
         #for tel1 in tels:
