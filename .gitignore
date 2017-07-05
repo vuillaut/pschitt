@@ -4,3 +4,4 @@ pschitt/__pycache__/*
 pschitt.egg-info/
 .idea/
 dist/
+notebooks/.ipynb_checkpoints/
