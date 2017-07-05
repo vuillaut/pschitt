@@ -132,11 +132,9 @@ def hillas_parameters_1(pix_x, pix_y, image):
     return [_s,m_x,m_y,length,width,r,phi,psi,miss]
 
 
-def hillas_parameters_2(pix_x, pix_y, image):
-    """Compute Hillas parameters for a given shower image.
-    Alternate implementation of `hillas_parameters` ...
-    in the end we'll just keep one, but we're using Hilllas parameter
-    computation as an example for performance checks.
+def hillas_parameters(pix_x, pix_y, image):
+    """
+    Hillas parameters calculation.
     Parameters
     ----------
     pix_x : array_like
@@ -150,10 +148,9 @@ def hillas_parameters_2(pix_x, pix_y, image):
     hillas_parameters : `MomentParameters`
     """
 
-    assert image.sum() > 0
+    amplitude = image.sum()
+    assert amplitude > 0
 
-    #unit = pix_x.unit
-    unit = 1.
 
     pix_x = Quantity(np.asanyarray(pix_x, dtype=np.float64)).value
     pix_y = Quantity(np.asanyarray(pix_y, dtype=np.float64)).value
@@ -161,19 +158,14 @@ def hillas_parameters_2(pix_x, pix_y, image):
     assert pix_x.shape == image.shape
     assert pix_y.shape == image.shape
 
-    # Compute image moments (done in a bit faster way, but putting all
-    # into one 2D array, where each row will be summed to calculate a
-    # moment) However, this doesn't avoid a temporary created for the
-    # 2D array
 
-    size = image.sum()
     momdata = np.row_stack([pix_x,
                             pix_y,
                             pix_x * pix_x,
                             pix_y * pix_y,
                             pix_x * pix_y]) * image
 
-    moms = momdata.sum(axis=1) / size
+    moms = momdata.sum(axis=1) / amplitude
 
     # calculate variances
 
@@ -210,29 +202,30 @@ def hillas_parameters_2(pix_x, pix_y, image):
     rr = np.hypot(moms[0], moms[1])
     phi = np.arctan2(moms[1], moms[0])
 
-    '''return MomentParameters(size=size, cen_x=moms[0]*unit, cen_y=moms[1]*unit,
-                            length=length*unit, width=width*unit, r=rr, phi=phi,
-                            psi=psi.to(u.rad) , miss=miss*unit)
-    '''
-    return [size,moms[0],moms[1],length,width,rr,phi,psi.value,miss]
-
-# use the 2 version by default
-hillas_parameters = hillas_parameters_1
-
-"""
-def camera_frame_to_R(alt, az):
-    '''
-    return coordinates of base vectors of camera frame in global frame
-    '''
-    xx = [-sin(az), cos(az), 0]
-    yy = [-sin(alt) * cos(az), -sin(az) * sin(alt), cos(alt)]
-    zz = [cos(alt) * cos(az), cos(alt) * sin(az), sin(alt)]
-    return np.array([xx, yy, zz])
-"""
+    return [amplitude, moms[0], moms[1], length, width, rr, phi, psi.value, miss]
 
 
 
-def reco_impact_parameter(hillas_parameters_1, alt1, az1, tel1, hillas_parameters_2, alt2, az2, tel2, z=0):
+
+def reco_impact_parameter(hillas_parameters_1, tel1, hillas_parameters_2, alt2, az2, tel2, z=0):
+    """
+    Geometric reconstruction of the impact parameter
+    Parameters
+    ----------
+    hillas_parameters_1: Hillas parameters of the first telescope
+    alt1: pointing altitude of first telescope
+    az1: pointing azimuth of first telescope
+    tel1: first telescope class
+    hillas_parameters_2: Hillas parameters of the second telescope
+    alt2: pointing altitude of second telescope
+    az2: pointing azimuth of second telescope
+    tel2: second telescope class
+    z: Plan in which to compute the impact parameter
+
+    Returns
+    -------
+    1D Numpy array - position in space of the impact parameter
+    """
     cen_x1 = hillas_parameters_1[1]
     cen_y1 = hillas_parameters_1[2]
     psi1 = hillas_parameters_1[6]
@@ -240,8 +233,11 @@ def reco_impact_parameter(hillas_parameters_1, alt1, az1, tel1, hillas_parameter
     cen_y2 = hillas_parameters_2[2]
     psi2 = hillas_parameters_2[6]
 
-    barycenter1 = geo.barycenter_in_R(tel1, alt1, az1, cen_x1, cen_y1)
-    barycenter2 = geo.barycenter_in_R(tel2, alt2, az2, cen_x2, cen_y2)
+    alt1, az1 = geo.normal_to_altaz(tel1.normal)
+    alt2, az2 = geo.normal_to_altaz(tel2.normal)
+
+    barycenter1 = geo.barycenter_in_R(tel1, cen_x1, cen_y1)
+    barycenter2 = geo.barycenter_in_R(tel2, cen_x2, cen_y2)
 
     n1 = geo.normal_vector_ellipse_plane(psi1, alt1, az1)
     n2 = geo.normal_vector_ellipse_plane(psi2, alt2, az2)
