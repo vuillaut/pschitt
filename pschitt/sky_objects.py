@@ -7,6 +7,7 @@ from . import geometry as geo
 import math
 import random
 import scipy.special as ss
+from copy import copy
 
 
 
@@ -105,7 +106,7 @@ class shower:
         alt: float
         az: float
         """
-        self.array = shower_rot(self.array, alt, az)
+        self.array = shower_array_rot(self.array, alt, az)
 
 
     def plot3d(self):
@@ -267,7 +268,7 @@ def gaussian_ellipsoide(shower_top_altitude, shower_length, shower_width, alt, a
     """
     shower_center = [0, 0, shower_top_altitude - shower_length/2.]
     shower = gaussian_ellipsoide_alongz(shower_center, shower_length, shower_width, n)
-    return shower_rot(shower, alt, az) + np.array(impact_point)
+    return shower_array_rot(shower, alt, az) + np.array(impact_point)
 
 
 def shifted_ellipsoide_v1(shower_center, shower_length, shower_width, n, p, origin_altitude):
@@ -315,23 +316,39 @@ def plot3d(shower):
     plt.show()
 
 
-def shower_rot(shower, alt, az):
+def shower_array_rot(shower_array, alt, az):
     """
     Given a series of point on the Z axis, perform a rotation of alt around Y and az around Z
 
     Parameters
     ----------
-    shower: numpy array of shape (N,3) giving N points coordinates
+    shower_array: numpy array of shape (N,3) giving N points coordinates
     alt: altitude shower direction - float
     az: azimuth shower direction - float
-    impact_point: numpy array
 
     Returns
     -------
     Numpy array of shape (N,3) giving N points coordinates
     """
-    rotated_shower = geo.rotation_matrix_z(az) * geo.rotation_matrix_y(math.pi / 2. - alt) * shower.T
-    return np.array(rotated_shower.T)
+    rotated_shower_array = geo.rotation_matrix_z(az) * geo.rotation_matrix_y(math.pi / 2. - alt) * shower_array.T
+    return np.array(rotated_shower_array.T)
+
+
+def rotated_shower(shower, alt, az):
+    """
+    Return a rotated shower object from a shower object and a direction (alt, az)
+    Parameters
+    ----------
+    shower: shower class object
+
+    Returns
+    -------
+    copy of the given shower but rotated
+    """
+    rot_shower = copy(shower)
+    rot_shower.array = shower_array_rot(shower.array, shower.alt, shower.az)
+    return rot_shower
+
 
 
 def random_ellipsoide(shower_top_altitude, shower_length, shower_width, alt, az, impact_point, n):
@@ -353,7 +370,7 @@ def random_ellipsoide(shower_top_altitude, shower_length, shower_width, alt, az,
     """
     shower_center = [0, 0, shower_top_altitude - shower_length/2.]
     shower = random_ellipsoide_alongz(shower_center, shower_length, shower_width, n)
-    return shower_rot(shower, alt, az) + np.array(impact_point)
+    return shower_array_rot(shower, alt, az) + np.array(impact_point)
 
 
 def gaisser_hillas_reduced(x, eps):
@@ -521,7 +538,6 @@ def Get_pos_Gaisser_Hillas(Npart, alt, az, impact_point):
 
     """
     shower = np.empty([Npart, 3])
-    # shower_rot = np.empty([Npart, 3])
     N = []
     impact_point = np.array(impact_point)
     Xinterp = []
@@ -590,7 +606,7 @@ def Get_pos_Gaisser_Hillas(Npart, alt, az, impact_point):
         shower[i] = [x[i], y[i], z[i]]
 
     return shower
-    #return shower_rot(shower, alt, az, impact_point)
+    #return shower_array_rot(shower, alt, az, impact_point)
 
 
 def radial_distribution(r, R):
@@ -671,7 +687,6 @@ def gaisser_hillas_shower(shower_top_altitude, shower_length, alt, az, impact_po
 
     """
     shower = np.empty([Npart, 3])
-    # shower_rot = np.empty([Npart, 3])
     N = []
     impact_point = np.array(impact_point)
     Xinterp = []
@@ -726,4 +741,4 @@ def gaisser_hillas_shower(shower_top_altitude, shower_length, alt, az, impact_po
         shower[i] = [x[i], y[i], z[i]]
 
     return shower
-    # return shower_rot(shower, alt, az) + np.array(impact_point)
+    # return shower_array_rot(shower, alt, az) + np.array(impact_point)
