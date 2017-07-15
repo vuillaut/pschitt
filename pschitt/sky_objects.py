@@ -8,6 +8,7 @@ import math
 import random
 import scipy.special as ss
 from copy import copy
+from scipy.special import gamma as sgamma
 
 
 
@@ -744,12 +745,13 @@ def gaisser_hillas_shower(shower_top_altitude, shower_length, alt, az, impact_po
     # return shower_array_rot(shower, alt, az) + np.array(impact_point)
 
 
-def gil_distribution(ep, a, t):
+def gil_distribution(ep, a, t, x1):
     """
     ## TO DO : comment / add names
     ## log or log10 ?
     ## t or X1 as parameter ?
     ## t can be computed in external function
+    ## Good ref ?
 
     Greisen-Iljina-Linsley (GIL) parametrisation for hadronic showers longitudinal profile
     ref: Catalano O. et al. Proc. of 27th ICRC, Hamburg (Germany) p.498, 2001, 2001
@@ -759,6 +761,7 @@ def gil_distribution(ep, a, t):
     ep: float - primary particle energy [TeV]
     a: float - mass of the primary
     t: float or 1D Numpy array
+    x1: float - first interaction depth
 
     Returns
     -------
@@ -769,13 +772,133 @@ def gil_distribution(ep, a, t):
     X0 = 36.7 # interaction depth [g/cm2]
     el = 1.45 # normalisation energy [TeV]
 
-    t = (X - X1)/ X0
-    tmax = 1.7 + 0.76 * (np.log(ep/ec) - np.log(a))
 
-    # age of the shower:
-    s = 2 * t / (t + tmax)
-
+    s = shower_age(X, x1, ep, a)
     n = ep/el * np.exp(t * (1 - 2 * np.log(s)) - tmax)
 
     return n
 
+
+def shower_age(x, x1, ep, a):
+    """
+    Compute the shower age as defined in GIL parameterisation
+    ref: Catalano O. et al. Proc. of 27th ICRC, Hamburg (Germany) p.498, 2001, 2001
+
+    Parameters
+    ----------
+    x: float or 1D Numpy array - interaction depth
+    x1: float - first interaction depth
+    ep: float - energy of the primary
+    a: float - atomic mass of the primary
+
+    Returns
+    -------
+    shower age s - X type (float or 1D Numpy array)
+    """
+    x0 = 36.7  # interaction depth [g/cm2]
+    ec = 0.081  # critical energy [TeV]
+
+    t = (x - x1)/ x0
+    tmax = 1.7 + 0.76 * (np.log(ep/ec) - np.log(a))
+
+    s = 2 * t / (t + tmax)
+    return s
+
+
+def nkg_distribution(X, x1, r, ep, a):
+    """
+
+    Parameters
+    ----------
+    X
+    x1
+    r: distance to shower axis
+    ep: float - emergy of the primary
+    a: float - atomic mass of the primary
+
+    Returns
+    -------
+
+    """
+    rm = 118. ### why ?
+    rm = moliere_radius(x0, z)
+    s = shower_age(x, x1, ep, a)
+
+    Cs = sgamma(4.5 - s) / (math.pi * 2 * rm * rm * sgamma(s) * sgamma(4.5 - 2 * s))
+
+    ## Ns ?
+    G = 1e6 * Cs * np.power(1 + r/rm, s-4.5) * np.power(r/rm, s - 2)
+    return G
+
+
+def radial_exp_distribution(N0, rm):
+    """
+    Gives an exponantially decreasing distribution N(r) = N0 * exp(-beta * r)
+    with beta = ln(10)/rm so that 90% of the particles are contained in the molière radius rm
+
+    Parameters
+    ----------
+    N0: Total number of particles in the shower
+    rm: Molière radius [m]
+
+    Returns
+    -------
+    1D Numpy array of length N0. Gives a distribution of radius following an exponantial decrease
+    """
+    assert N0 > 0
+
+    ln10 = np.log(10)
+
+    return N0 * rm / ln10 * (1 - np.exp(-ln10 * r / rm))
+
+
+
+def moliere_radius_approx(x0, z):
+    """
+    Molière radius = radius containing on average 90% of the shower's energy deposition
+    Approximation given by [ref]
+
+    Parameters
+    ----------
+    x0: float - radiation length
+    z: float - atomic number
+
+    Returns
+    -------
+    moliere radius - float
+    """
+    rm = 0.0265 * x0  * (z + 1.2)
+
+    return rm
+
+
+
+def longo_distribution(ep, ):
+
+    ec = 0.086 # electrons critical energy [TeV]
+    y = ep/ec # normalised energy
+    lny = np.log(y)
+    beta = 1.0 / (1.53 + 0.01 * lny)
+    alpha = beta * (2.16 + 0.99 * lny)
+    t = radiation_length(x, 0)
+
+    n = E0 * beta * np.power(beta * t, alpha - 1) * np.exp(-beta * t) / sgamma(alpha)
+
+
+def radiation_length(x, x1):
+    """
+    Radiation length
+
+    Parameters
+    ----------
+    x: interaction depth - float or 1D Numpy array
+    x1: first interaction depth [g/cm2]
+
+    Returns
+    -------
+    radiation length t - same type as x
+    """
+    # Radiation length via Bremsstrahlung of electrons in the air [g/cm2]:
+    x0 = 36.7
+    t = (x - x1)/x0
+    return t
