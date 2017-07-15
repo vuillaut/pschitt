@@ -75,37 +75,37 @@ class Telescope:
         elif camera_type == 'astri':
             self.type = "sst"
             self.focal = SST_FOCAL
-            self.pixpos_filename = 'share/cameras/PosPixel_0.txt'
+            self.pixpos_filename = 'share/cameras/PosPixel_4.txt'
             self.set_pixel_pos_from_file()
 
         elif camera_type == 'gct':
             self.type="sst"
             self.focal = SST_FOCAL
-            self.pixpos_filename = 'share/cameras/PosPixel_0.txt'
+            self.pixpos_filename = 'share/cameras/PosPixel_6.txt'
             self.set_pixel_pos_from_file()
 
         elif camera_type == 'dc':
             self.type="sst"
             self.focal = SST_FOCAL
-            self.pixpos_filename = 'share/cameras/PosPixel_0.txt'
+            self.pixpos_filename = 'share/cameras/PosPixel_5.txt'
             self.set_pixel_pos_from_file()
 
         elif camera_type == 'sct':
             self.type="mst"
             self.focal = MST_FOCAL
-            self.pixpos_filename = 'share/cameras/PosPixel_0.txt'
+            self.pixpos_filename = 'share/cameras/PosPixel_3.txt'
             self.set_pixel_pos_from_file()
 
         elif camera_type == 'nectar':
             self.type="mst"
             self.focal = MST_FOCAL
-            self.pixpos_filename = 'share/cameras/PosPixel_0.txt'
+            self.pixpos_filename = 'share/cameras/PosPixel_1.txt'
             self.set_pixel_pos_from_file()
 
         elif camera_type == 'flash':
             self.type="mst"
             self.focal = MST_FOCAL
-            self.pixpos_filename = 'share/cameras/PosPixel_0.txt'
+            self.pixpos_filename = 'share/cameras/PosPixel_2.txt'
             self.set_pixel_pos_from_file()
 
         elif camera_type == 'lst_cam':

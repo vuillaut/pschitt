@@ -4,9 +4,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from . import geometry as geo
-import math
-import random
-import scipy.special as ss
+from math import pi
 from copy import copy
 
 
@@ -173,8 +171,8 @@ def random_surface_sphere(shower_center, shower_radius, n):
     -------
     Numpy array (3,n) - positions of particles in shower
     """
-    theta = math.pi * np.random.random_sample(n)
-    phi = 2. * math.pi * np.random.random_sample(n)
+    theta = pi * np.random.random_sample(n)
+    phi = 2. * pi * np.random.random_sample(n)
     x = shower_center[0] + shower_radius * np.sin(theta) * np.cos(phi)
     y = shower_center[1] + shower_radius * np.sin(theta) * np.sin(phi)
     z = shower_center[2] + shower_radius * np.cos(theta)
@@ -196,7 +194,7 @@ def random_surface_ellipsoide(shower_center, shower_length, shower_width, n):
     -------
     Numpy array (3,n) - positions of particles in shower
     """
-    theta,phi = math.pi * np.random.random_sample(n), 2. * math.pi * np.random.random_sample(n)
+    theta,phi = pi * np.random.random_sample(n), 2. * pi * np.random.random_sample(n)
     x = shower_center[0] + shower_width * np.sin(theta) * np.cos(phi)
     y = shower_center[1] + shower_width * np.sin(theta) * np.sin(phi)
     z = shower_center[2] + shower_length * np.cos(theta)
@@ -218,7 +216,7 @@ def random_ellipsoide_alongz(shower_center, shower_length, shower_width, n):
     -------
     Numpy array (3,n) - positions of particles in shower
     """
-    theta, phi = math.pi * np.random.random_sample(n), 2. * math.pi * np.random.random_sample(n)
+    theta, phi = pi * np.random.random_sample(n), 2. * pi * np.random.random_sample(n)
     q, p = shower_length * np.random.random_sample(n), shower_width * np.random.random_sample(n)
     x = shower_center[0] + p/2. * np.sin(theta) * np.cos(phi)
     y = shower_center[1] + p/2. * np.sin(theta) * np.sin(phi)
@@ -330,7 +328,7 @@ def shower_array_rot(shower_array, alt, az):
     -------
     Numpy array of shape (N,3) giving N points coordinates
     """
-    rotated_shower_array = geo.rotation_matrix_z(az) * geo.rotation_matrix_y(math.pi / 2. - alt) * shower_array.T
+    rotated_shower_array = geo.rotation_matrix_z(az) * geo.rotation_matrix_y(pi / 2. - alt) * shower_array.T
     return np.array(rotated_shower_array.T)
 
 

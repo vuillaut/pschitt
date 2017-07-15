@@ -1,66 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 
-"""Hillas shower parametrization.
-TODO:
------
-- Should have a separate function or option to compute 3rd order
-  moments + asymmetry (which are not always needed)
-- remove alpha calculation (which is only about (0,0), and make a get
-  alpha function that does it from an arbitrary point given a
-  pre-computed list of parameters
-"""
+
 import numpy as np
 from astropy.units import Quantity
-from collections import namedtuple
 import astropy.units as u
 from . import geometry as geo
 from math import *
-
-
-__all__ = [
-    'MomentParameters',
-    'HighOrderMomentParameters',
-    'hillas_parameters',
-]
-
-
-MomentParameters = namedtuple(
-    "MomentParameters",
-    "size,cen_x,cen_y,length,width,r,phi,psi,miss"
-)
-"""Shower moment parameters up to second order.
-See also
---------
-HighOrderMomentParameters, hillas_parameters, hillas_parameters_2
-"""
-
-HighOrderMomentParameters = namedtuple(
-    "HighOrderMomentParameters",
-    "skewness,kurtosis,asymmetry"
-)
-"""Shower moment parameters of third order.
-See also
---------
-MomentParameters, hillas_parameters, hillas_parameters_2
-"""
-
-class HillasParameters():
-    """
-    Class to handle Hillas parameters
-    """
-    def __init__(self):
-        phi = 0.
-        intensity = 0.
-        width = 0.
-        length =0.
-        gx = 0.
-        gy = 0.
-
-
-    def plot_ellipse(self):
-        """
-        To write: plot the ellipse in the camera
-        """
 
 
 
@@ -77,18 +22,18 @@ def hillas_parameters(pix_x, pix_y, image):
         Pixel values corresponding
     Returns
     -------
-    hillas_parameters : `MomentParameters`
+    hillas_parameters - 1D Numpy array
     """
 
     amplitude = image.sum()
     assert amplitude > 0
 
 
-    pix_x = Quantity(np.asanyarray(pix_x, dtype=np.float64)).value
-    pix_y = Quantity(np.asanyarray(pix_y, dtype=np.float64)).value
+    # pix_x = Quantity(np.asanyarray(pix_x, dtype=np.float64)).value
+    # pix_y = Quantity(np.asanyarray(pix_y, dtype=np.float64)).value
 
-    assert pix_x.shape == image.shape
-    assert pix_y.shape == image.shape
+    # assert pix_x.shape == image.shape
+    # assert pix_y.shape == image.shape
 
 
     momdata = np.row_stack([pix_x,
@@ -127,14 +72,14 @@ def hillas_parameters(pix_x, pix_y, image):
 
     tanpsi_numer = (dd + zz) * moms[1] + 2.0 * vxy * moms[0]
     tanpsi_denom = (2 * vxy * moms[1]) - (dd - zz) * moms[0]
-    psi = ((np.pi / 2.0) + np.arctan2(tanpsi_numer, tanpsi_denom))* u.rad
+    psi = ((np.pi / 2.0) + np.arctan2(tanpsi_numer, tanpsi_denom))
 
     # polar coordinates of centroid
 
     rr = np.hypot(moms[0], moms[1])
     phi = np.arctan2(moms[1], moms[0])
 
-    return [amplitude, moms[0], moms[1], length, width, rr, phi, psi.value, miss]
+    return np.array([amplitude, moms[0], moms[1], length, width, rr, phi, psi, miss])
 
 
 
