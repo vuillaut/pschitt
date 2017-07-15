@@ -18,3 +18,5 @@ python setup.py develop
 
 Sorry there is no complete documentation yet.
 You can start with notebooks/example.ipynb - or contact the author.
+
+-----
