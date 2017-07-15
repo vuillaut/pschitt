@@ -9,14 +9,17 @@ It is intended to model atmospheric showers and image them with Imaging Atmosphe
 
 -----
 
-Install
-python setup.py install
-python setup.py develop
+Install  
+
+python setup.py install 
+
+python setup.py develop  
 
 
 -----
 
-Sorry there is no complete documentation yet.
-You can start with notebooks/example.ipynb - or contact the author.
+Sorry there is no complete documentation yet.  
+
+You can start with notebooks/example.ipynb - or contact the author.  
 
 -----
