@@ -5,3 +5,4 @@ pschitt.egg-info/
 .idea/
 dist/
 notebooks/.ipynb_checkpoints/
+*.DS_Store
