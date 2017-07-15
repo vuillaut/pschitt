@@ -9,12 +9,18 @@ It is intended to model atmospheric showers and image them with Imaging Atmosphe
 
 -----
 
-Install  
+Install:
 
 python setup.py install 
 
 python setup.py develop  
 
+install requires:
+- astropy     
+- numpy   
+- scipy>=0.19  
+- matplotlib>=2.0    
+- numba  
 
 -----
 
