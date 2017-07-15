@@ -16,7 +16,7 @@ python setup.py install
 python setup.py develop  
 
 install requires:
-- astropy     
+- astropy
 - numpy   
 - scipy>=0.19  
 - matplotlib>=2.0    
