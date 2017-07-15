@@ -742,3 +742,40 @@ def gaisser_hillas_shower(shower_top_altitude, shower_length, alt, az, impact_po
 
     return shower
     # return shower_array_rot(shower, alt, az) + np.array(impact_point)
+
+
+def gil_distribution(ep, a, t):
+    """
+    ## TO DO : comment / add names
+    ## log or log10 ?
+    ## t or X1 as parameter ?
+    ## t can be computed in external function
+
+    Greisen-Iljina-Linsley (GIL) parametrisation for hadronic showers longitudinal profile
+    ref: Catalano O. et al. Proc. of 27th ICRC, Hamburg (Germany) p.498, 2001, 2001
+
+    Parameters
+    ----------
+    ep: float - primary particle energy [TeV]
+    a: float - mass of the primary
+    t: float or 1D Numpy array
+
+    Returns
+    -------
+
+    """
+
+    ec = 0.081 # critical energy [TeV]
+    X0 = 36.7 # interaction depth [g/cm2]
+    el = 1.45 # normalisation energy [TeV]
+
+    t = (X - X1)/ X0
+    tmax = 1.7 + 0.76 * (np.log(ep/ec) - np.log(a))
+
+    # age of the shower:
+    s = 2 * t / (t + tmax)
+
+    n = ep/el * np.exp(t * (1 - 2 * np.log(s)) - tmax)
+
+    return n
+
