@@ -6,14 +6,17 @@ import mpl_toolkits.mplot3d.art3d as art3d
 from scipy import stats
 
 
-def plot_shower3d(shower, alltel, density_color=True):
+def plot_shower3d(shower, alltel, **options):
     """
     Display the sky object (shower) and the telescope in a 3D representation
     Parameters
     ----------
     shower: array of points (arrays [x,y,z])
     alltel: array of telescopes (telescope class)
-    density_color: boolean to use density for particles color. Set False to speed-up plotting.
+    options:
+        - density_color = True: use density for particles color. False by default.
+        - display = True: show the plot. False by default
+        - outfile = "file.eps" : save the plot as `file.eps`. False by default.
     """
     fig = plt.figure(figsize=(12,12))
     ax = fig.add_subplot(111, projection='3d')
@@ -28,7 +31,7 @@ def plot_shower3d(shower, alltel, density_color=True):
 
     values = shower.array.T
 
-    if density_color:
+    if opt.get("density_color") == True:
         kde = stats.gaussian_kde(values)
         density = kde(values)
         ax.scatter(values[0] , values[1], values[2], marker='o', c=density)
@@ -39,8 +42,12 @@ def plot_shower3d(shower, alltel, density_color=True):
     ax.set_xlabel("[m]")
     ax.set_zlabel("altitude [m]")
     plt.legend()
-    #plt.axis('equal')
-    #plt.show()
+    if opt.get("display") == True:
+        plt.show()
+    if opt.get("outfile"):
+        outfile = opt.get("outfile")
+        assert isinstance(outfile, str), "The given outfile option should be a string"
+        plt.savefig(outfile + '.eps', format='eps', dpi=200)
 
 
 def display_camera_image(telescope):
@@ -54,6 +61,7 @@ def display_camera_image(telescope):
     plt.scatter(telescope.pixel_tab[:, 0], telescope.pixel_tab[:, 1], c=telescope.signal_hist)
     plt.axis('equal')
     plt.colorbar(label='counts')
+    plt.show()
 
 
 def display_stacked_cameras(telescope_array):
@@ -73,6 +81,7 @@ def display_stacked_cameras(telescope_array):
     plt.scatter(tel0.pixel_tab[:, 0], tel0.pixel_tab[:, 1], c=stacked_hist)
     plt.axis('equal')
     plt.colorbar(label='counts')
+    plt.show()
 
 
 def display_pointing_tel(tel, show=True):
