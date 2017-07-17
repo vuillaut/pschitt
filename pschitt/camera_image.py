@@ -198,3 +198,27 @@ def array_shower_imaging(shower, tel_array, noise):
         shower_camera_image(shower, tel, noise)
 
 
+
+def shower_camera_image_argorder(shower, noise, tel):
+    shower_camera_image(shower, tel, noise)
+    return None
+
+
+def array_shower_imaging_multiproc(shower, tel_array, noise):
+    """
+    TEST
+    Given a shower object and an array of telescopes, compute the image of the shower in each camera
+    Background noise can be added
+    The camera signal is registered in all tel.signal_hist
+    Parameters
+    ----------
+    shower: 3D Numpy array with a list of space position points composing the shower
+    tel_array: Numpy array or list of telescope classes
+    noise: float
+    """
+
+    pool = Pool(processes=4)
+    func = partial(shower_camera_image_argorder, shower, noise)
+    pool.map(func, tel_array)
+    pool.close()
+    pool.join()
