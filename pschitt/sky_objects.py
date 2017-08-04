@@ -754,7 +754,7 @@ def gil_distribution(ep, a, t, x1):
     ## Good ref ?
 
     Greisen-Iljina-Linsley (GIL) parametrisation for hadronic showers longitudinal profile
-    ref: Catalano O. et al. Proc. of 27th ICRC, Hamburg (Germany) p.498, 2001, 2001
+    ref: Catalano O. et al. Proc. of 27th ICRC, Hamburg (Germany) p.498, 2001
 
     Parameters
     ----------
@@ -767,15 +767,12 @@ def gil_distribution(ep, a, t, x1):
     -------
 
     """
-
     ec = 0.081 # critical energy [TeV]
     X0 = 36.7 # interaction depth [g/cm2]
     el = 1.45 # normalisation energy [TeV]
 
-
     s = shower_age(X, x1, ep, a)
     n = ep/el * np.exp(t * (1 - 2 * np.log(s)) - tmax)
-
     return n
 
 
