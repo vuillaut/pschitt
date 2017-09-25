@@ -18,7 +18,11 @@ def plot_shower3d(shower, alltel, **options):
         - display = True: show the plot. False by default
         - outfile = "file.eps" : save the plot as `file.eps`. False by default.
     """
-    fig = plt.figure(figsize=(12,12))
+    if options.get("figsize"):
+        figsize = options.get("figsize")
+    else:
+        figsize=(12,12)
+    fig = plt.figure(figsize=figsize)
     ax = fig.add_subplot(111, projection='3d')
     for tel in alltel:
         p = plt.Circle((tel.mirror_center[0],tel.mirror_center[1]), 30, color='black')
@@ -31,7 +35,7 @@ def plot_shower3d(shower, alltel, **options):
 
     values = shower.array.T
 
-    if opt.get("density_color") == True:
+    if options.get("density_color") == True:
         kde = stats.gaussian_kde(values)
         density = kde(values)
         ax.scatter(values[0] , values[1], values[2], marker='o', c=density)
@@ -41,11 +45,10 @@ def plot_shower3d(shower, alltel, **options):
     plt.axis([-1000, 1000, -1000, 1000])
     ax.set_xlabel("[m]")
     ax.set_zlabel("altitude [m]")
-    plt.legend()
-    if opt.get("display") == True:
+    if options.get("display") == True:
         plt.show()
-    if opt.get("outfile"):
-        outfile = opt.get("outfile")
+    if options.get("outfile"):
+        outfile = options.get("outfile")
         assert isinstance(outfile, str), "The given outfile option should be a string"
         plt.savefig(outfile + '.eps', format='eps', dpi=200)
 
@@ -81,7 +84,6 @@ def display_stacked_cameras(telescope_array):
     plt.scatter(tel0.pixel_tab[:, 0], tel0.pixel_tab[:, 1], c=stacked_hist)
     plt.axis('equal')
     plt.colorbar(label='counts')
-    plt.show()
 
 
 def display_pointing_tel(tel, show=True):
