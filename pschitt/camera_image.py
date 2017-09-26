@@ -111,6 +111,26 @@ def add_noise_poisson(signal, lam=100):
     return signal
 
 
+def add_noise_gaussian(signal, lam=10):
+    """
+    Add Poisson noise to the image
+
+    Parameters
+    ----------
+    signal : pixels signal - array
+    lam : lambda for Poisson law - float
+
+    Returns
+    -------
+    signal array
+    """
+    if lam > 0:
+        signal += np.random.normal(0, lam, signal.size)
+    return signal
+
+
+
+
 def shower_image_in_camera(telescope, photon_pos_tab, lam=0, impact_distance=0, result_filename=None):
     """
     Compute the camera image given the positions of the photons in the camera frame.
@@ -129,7 +149,7 @@ def shower_image_in_camera(telescope, photon_pos_tab, lam=0, impact_distance=0, 
     """
     pixels_signal = photons_to_signal(photon_pos_tab, telescope.pixel_tab)
     pixels_signal = pixels_signal * emi.emission_coef(impact_distance)
-    pixels_signal = add_noise_poisson(pixels_signal, lam)
+    pixels_signal = add_noise_gaussian(pixels_signal, lam)
     if result_filename:
         write_camera_image(pix_hist, result_filename)
     return pixels_signal
