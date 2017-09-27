@@ -39,10 +39,7 @@ def find_closest_pixel(pos, pixel_tab):
     -------
     Pixel index in the given pixel_tab, corresponding distance to the pixel
     """
-    #D = np.linalg.norm(pixel_tab-pos, axis=1)
-    #linalg.norm is surprisingly slow
     x = pixel_tab - pos
-    # D = np.sqrt(x[:, 0]**2 + x[:, 1]**2)
     D2 = x[:, 0] ** 2 + x[:, 1] ** 2
     return D2.argmin()
 
@@ -65,15 +62,9 @@ def photons_to_signal(photon_pos_tab, pixel_tab):
     d_max2 = (pixel_tab[:, 0]**2 + pixel_tab[:, 1]**2).max()
     for photon in photon_pos_tab:
         if photon[0]**2 + photon[1]**2 < d_max2:
-            # pxi = find_closest_pixel(photon, pixel_tab)
             x = pixel_tab - photon
             D2 = x[:, 0] ** 2 + x[:, 1] ** 2
-            # pxi = D2.argmin()
             count[D2.argmin()] += 1
-
-    # for photon in photon_pos_tab:
-    #     pxi = find_closest_pixel(photon, pixel_tab)
-    #     count[pxi] += photon[0]**2 + photon[1]**2 < d_max2
 
     return count
 
@@ -81,8 +72,10 @@ def photons_to_signal(photon_pos_tab, pixel_tab):
 def write_camera_image(pix_hist, filename="data/camera_image.txt"):
     """
     Save camera image in a file
-    :param pix_hist: array - pixel histogram
-    :param filename: string
+    Parameters
+    ----------
+    pix_hist : array - pixels signal
+    filename : string
     """
     np.savetxt(filename,pix_hist,fmt='%.5f')
 
@@ -103,13 +96,39 @@ def shower_image_in_camera_old(telescope, photon_pos_tab, pixel_pos_filename):
 def add_noise_poisson(signal, lam=100):
     """
     Add Poisson noise to the image
-    :param pix_hist: pixel histogram
-    :param lam: lambda for Poisson law
-    :return: pixel histogram
+
+    Parameters
+    ----------
+    signal : pixels signal - array
+    lam : lambda for Poisson law - float
+
+    Returns
+    -------
+    signal array
     """
     if(lam>=0):
         signal += np.random.poisson(lam, signal.size)
     return signal
+
+
+def add_noise_gaussian(signal, lam=10):
+    """
+    Add Poisson noise to the image
+
+    Parameters
+    ----------
+    signal : pixels signal - array
+    lam : lambda for Poisson law - float
+
+    Returns
+    -------
+    signal array
+    """
+    if lam > 0:
+        signal += np.random.normal(0, lam, signal.size)
+    return signal
+
+
 
 
 def shower_image_in_camera(telescope, photon_pos_tab, lam=0, impact_distance=0, result_filename=None):
@@ -130,7 +149,7 @@ def shower_image_in_camera(telescope, photon_pos_tab, lam=0, impact_distance=0, 
     """
     pixels_signal = photons_to_signal(photon_pos_tab, telescope.pixel_tab)
     pixels_signal = pixels_signal * emi.emission_coef(impact_distance)
-    pixels_signal = add_noise_poisson(pixels_signal, lam)
+    pixels_signal = add_noise_gaussian(pixels_signal, lam)
     if result_filename:
         write_camera_image(pix_hist, result_filename)
     return pixels_signal
@@ -199,26 +218,3 @@ def array_shower_imaging(shower, tel_array, noise):
         shower_camera_image(shower, tel, noise)
 
 
-def shower_camera_image_argorder(shower, noise, tel):
-    shower_camera_image(shower, tel, noise)
-    return None
-
-
-def array_shower_imaging_multiproc(shower, tel_array, noise):
-    """
-    TEST
-    Given a shower object and an array of telescopes, compute the image of the shower in each camera
-    Background noise can be added
-    The camera signal is registered in all tel.signal_hist
-    Parameters
-    ----------
-    shower: 3D Numpy array with a list of space position points composing the shower
-    tel_array: Numpy array or list of telescope classes
-    noise: float
-    """
-
-    pool = Pool(processes=4)
-    func = partial(shower_camera_image_argorder, shower, noise)
-    pool.map(func, tel_array)
-    pool.close()
-    pool.join()

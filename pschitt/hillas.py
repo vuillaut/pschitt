@@ -1,66 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 
-"""Hillas shower parametrization.
-TODO:
------
-- Should have a separate function or option to compute 3rd order
-  moments + asymmetry (which are not always needed)
-- remove alpha calculation (which is only about (0,0), and make a get
-  alpha function that does it from an arbitrary point given a
-  pre-computed list of parameters
-"""
+
 import numpy as np
-from astropy.units import Quantity
-from collections import namedtuple
-import astropy.units as u
 from . import geometry as geo
 from math import *
-
-
-__all__ = [
-    'MomentParameters',
-    'HighOrderMomentParameters',
-    'hillas_parameters',
-]
-
-
-MomentParameters = namedtuple(
-    "MomentParameters",
-    "size,cen_x,cen_y,length,width,r,phi,psi,miss"
-)
-"""Shower moment parameters up to second order.
-See also
---------
-HighOrderMomentParameters, hillas_parameters, hillas_parameters_2
-"""
-
-HighOrderMomentParameters = namedtuple(
-    "HighOrderMomentParameters",
-    "skewness,kurtosis,asymmetry"
-)
-"""Shower moment parameters of third order.
-See also
---------
-MomentParameters, hillas_parameters, hillas_parameters_2
-"""
-
-class HillasParameters():
-    """
-    Class to handle Hillas parameters
-    """
-    def __init__(self):
-        phi = 0.
-        intensity = 0.
-        width = 0.
-        length =0.
-        gx = 0.
-        gy = 0.
-
-
-    def plot_ellipse(self):
-        """
-        To write: plot the ellipse in the camera
-        """
 
 
 
@@ -69,27 +12,16 @@ def hillas_parameters(pix_x, pix_y, image):
     Hillas parameters calculation.
     Parameters
     ----------
-    pix_x : array_like
-        Pixel x-coordinate
-    pix_y : array_like
-        Pixel y-coordinate
-    image : array_like
-        Pixel values corresponding
+    pix_x : 1D Numpy array - Pixel x-coordinate
+    pix_y : 1D Numpy array - Pixel y-coordinate
+    image : 1D Numpy array - signal in each pixel
     Returns
     -------
-    hillas_parameters : `MomentParameters`
+    hillas_parameters - 1D Numpy array
     """
 
     amplitude = image.sum()
     assert amplitude > 0
-
-
-    pix_x = Quantity(np.asanyarray(pix_x, dtype=np.float64)).value
-    pix_y = Quantity(np.asanyarray(pix_y, dtype=np.float64)).value
-
-    assert pix_x.shape == image.shape
-    assert pix_y.shape == image.shape
-
 
     momdata = np.row_stack([pix_x,
                             pix_y,
@@ -127,14 +59,14 @@ def hillas_parameters(pix_x, pix_y, image):
 
     tanpsi_numer = (dd + zz) * moms[1] + 2.0 * vxy * moms[0]
     tanpsi_denom = (2 * vxy * moms[1]) - (dd - zz) * moms[0]
-    psi = ((np.pi / 2.0) + np.arctan2(tanpsi_numer, tanpsi_denom))* u.rad
+    psi = ((np.pi / 2.0) + np.arctan2(tanpsi_numer, tanpsi_denom))
 
     # polar coordinates of centroid
 
     rr = np.hypot(moms[0], moms[1])
     phi = np.arctan2(moms[1], moms[0])
 
-    return [amplitude, moms[0], moms[1], length, width, rr, phi, psi.value, miss]
+    return np.array([amplitude, moms[0], moms[1], length, width, rr, phi, psi, miss])
 
 
 
@@ -212,6 +144,19 @@ def reco_impact_parameter_test(hillas_parameters_1, tel1, hillas_parameters_2, t
 
 
 def impact_parameter_average(alltel, HillasParameters):
+    """
+    Reconstruction of the impact parameter taking the directions intersection
+    of telescopes two by two and averaging the result
+
+    Parameters
+    ----------
+    alltel: list of telescopes
+    HillasParameters: list of hillas_parameters
+
+    Returns
+    -------
+    Space coordinates of the impact parameter - list of floats
+    """
     P = []
     for i in np.arange(len(alltel)-1):
         for j in np.arange(i+1, len(alltel)):
@@ -226,6 +171,17 @@ def impact_parameter_average(alltel, HillasParameters):
 
 
 def coef_hillas_ponderation(hillas_parameters_1, hillas_parameters_2):
+    """
+    Weight of two telescopes reconstruction
+    Parameters
+    ----------
+    hillas_parameters_1: list of hillas parameters for camera 1
+    hillas_parameters_2: list of hillas parameters for camera 2
+
+    Returns
+    -------
+    Float - weight
+    """
     phi1 = hillas_parameters_1[6]
     intensity1 = hillas_parameters_1[0]
     width1 = hillas_parameters_1[4]
@@ -239,14 +195,26 @@ def coef_hillas_ponderation(hillas_parameters_1, hillas_parameters_2):
     gx2 = hillas_parameters_2[1]
     gy2 = hillas_parameters_2[2]
 
-    r = (gx1*gx1 + gy1*gy1 + gx2*gx2 + gy2*gy2)**6;
-    #print(gx1,gy1,gx2,gy2)
+    r = (gx1*gx1 + gy1*gy1 + gx2*gx2 + gy2*gy2)**6
+
     if r < 1e-6:
-        return fabs(sin(phi1 - phi2)) / ((1.0/intensity1 + 1.0/intensity2) + (width1/length1 + width2/length2));
+        return fabs(sin(phi1 - phi2)) / ((1.0/intensity1 + 1.0/intensity2) + (width1/length1 + width2/length2))
     else:
-        return fabs(sin(phi1 - phi2)) / ( (1.0/intensity1 + 1.0/intensity2 + width1/length1 + width2/length2) * r);
+        return fabs(sin(phi1 - phi2)) / ( (1.0/intensity1 + 1.0/intensity2 + width1/length1 + width2/length2) * r)
+
 
 def impact_parameter_ponderated(alltel, HillasParameters):
+    """
+    Reconstruction of the impact parameter using the weigths from coef_hillas_ponderation
+    Parameters
+    ----------
+    alltel: list of telescopes
+    HillasParameters: list of hillas_parameters for each telescope
+
+    Returns
+    -------
+    Coordinates of the impact parameter - list of floats
+    """
     P = []
     C = []
     for i in np.arange(len(alltel)):
@@ -257,16 +225,10 @@ def impact_parameter_ponderated(alltel, HillasParameters):
                 p = reco_impact_parameter_test(hp1, alltel[i], hp2, alltel[j], 0)
                 c = coef_hillas_ponderation(hp1, hp2)
                 P.append(p)
-                r12 = sqrt(hp1[1]**2 + hp1[2]**2)
-                r22 = sqrt(hp2[1]**2 + hp2[2]**2)
-                #if(r12>0.9*alltel[i].camera_size or r22>0.9*alltel[j].camera_size):
-                #    c = 0
                 C.append(c)
 
     P = np.array(P)
     C = np.array(C)
-    #if(C.min()!=C.max()):
-    #    C = (C - C.min())/(C.max()-C.min())
 
     return [np.average(P[:,0],weights=C), np.average(P[:,1],weights=C), np.average(P[:,2],weights=C)]
 

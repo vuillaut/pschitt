@@ -1,7 +1,7 @@
 import geometry as geo
-import CameraImage as ci
-import object as obj
-import Hillas as hillas
+import camera_image as ci
+import sky_objects as obj
+import hillas as hillas
 import numpy as np
 import unittest
 

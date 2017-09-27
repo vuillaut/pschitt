@@ -6,16 +6,23 @@ import mpl_toolkits.mplot3d.art3d as art3d
 from scipy import stats
 
 
-def plot_shower3d(shower, alltel, density_color=True):
+def plot_shower3d(shower, alltel, **options):
     """
     Display the sky object (shower) and the telescope in a 3D representation
     Parameters
     ----------
     shower: array of points (arrays [x,y,z])
     alltel: array of telescopes (telescope class)
-    density_color: boolean to use density for particles color. Set False to speed-up plotting.
+    options:
+        - density_color = True: use density for particles color. False by default.
+        - display = True: show the plot. False by default
+        - outfile = "file.eps" : save the plot as `file.eps`. False by default.
     """
-    fig = plt.figure(figsize=(12,12))
+    if options.get("figsize"):
+        figsize = options.get("figsize")
+    else:
+        figsize=(12,12)
+    fig = plt.figure(figsize=figsize)
     ax = fig.add_subplot(111, projection='3d')
     for tel in alltel:
         p = plt.Circle((tel.mirror_center[0],tel.mirror_center[1]), 30, color='black')
@@ -28,7 +35,7 @@ def plot_shower3d(shower, alltel, density_color=True):
 
     values = shower.array.T
 
-    if density_color:
+    if options.get("density_color") == True:
         kde = stats.gaussian_kde(values)
         density = kde(values)
         ax.scatter(values[0] , values[1], values[2], marker='o', c=density)
@@ -38,9 +45,12 @@ def plot_shower3d(shower, alltel, density_color=True):
     plt.axis([-1000, 1000, -1000, 1000])
     ax.set_xlabel("[m]")
     ax.set_zlabel("altitude [m]")
-    plt.legend()
-    #plt.axis('equal')
-    #plt.show()
+    if options.get("display") == True:
+        plt.show()
+    if options.get("outfile"):
+        outfile = options.get("outfile")
+        assert isinstance(outfile, str), "The given outfile option should be a string"
+        plt.savefig(outfile + '.eps', format='eps', dpi=200)
 
 
 def display_camera_image(telescope):
@@ -54,6 +64,7 @@ def display_camera_image(telescope):
     plt.scatter(telescope.pixel_tab[:, 0], telescope.pixel_tab[:, 1], c=telescope.signal_hist)
     plt.axis('equal')
     plt.colorbar(label='counts')
+    plt.show()
 
 
 def display_stacked_cameras(telescope_array):

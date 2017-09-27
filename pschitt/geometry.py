@@ -6,13 +6,17 @@ import numpy as np
 import math
 from . import camera_image as ci
 from . import vizualisation as viz
+import os
+
 
 DEF = -10000
-
 
 LST_FOCAL = 16
 MST_FOCAL = 10
 SST_FOCAL = 5
+
+pschitt_dir = os.path.split(__file__)[0].rsplit('/', maxsplit=1)[0] + '/'
+
 
 '''
 Camera Types
@@ -67,55 +71,55 @@ class Telescope:
         camera_type: string. Support camera types:
         'square', 'astri', 'gct', 'dc', 'sct', 'nectar', 'flash','lst_cam'
         """
-        self.camera_type = camera_type
+        self.camera_type = str(camera_type)
 
-        if camera_type == 'default':
+        if self.camera_type == 'default':
             self.set_default_cam()
 
-        elif camera_type == 'astri':
+        elif self.camera_type in ['astri', '4']:
             self.type = "sst"
             self.focal = SST_FOCAL
-            self.pixpos_filename = 'share/cameras/PosPixel_0.txt'
+            self.pixpos_filename = pschitt_dir + 'share/cameras/PosPixel_4.txt'
             self.set_pixel_pos_from_file()
 
-        elif camera_type == 'gct':
+        elif self.camera_type in ['gct', '6']:
             self.type="sst"
             self.focal = SST_FOCAL
-            self.pixpos_filename = 'share/cameras/PosPixel_0.txt'
+            self.pixpos_filename = pschitt_dir + 'share/cameras/PosPixel_6.txt'
             self.set_pixel_pos_from_file()
 
-        elif camera_type == 'dc':
+        elif self.camera_type in ['dc', '5']:
             self.type="sst"
             self.focal = SST_FOCAL
-            self.pixpos_filename = 'share/cameras/PosPixel_0.txt'
+            self.pixpos_filename = pschitt_dir + 'share/cameras/PosPixel_5.txt'
             self.set_pixel_pos_from_file()
 
-        elif camera_type == 'sct':
+        elif self.camera_type in ['sct', '3']:
             self.type="mst"
             self.focal = MST_FOCAL
-            self.pixpos_filename = 'share/cameras/PosPixel_0.txt'
+            self.pixpos_filename = pschitt_dir + 'share/cameras/PosPixel_3.txt'
             self.set_pixel_pos_from_file()
 
-        elif camera_type == 'nectar':
+        elif self.camera_type in ['nectar', '1']:
             self.type="mst"
             self.focal = MST_FOCAL
-            self.pixpos_filename = 'share/cameras/PosPixel_0.txt'
+            self.pixpos_filename = pschitt_dir + 'share/cameras/PosPixel_1.txt'
             self.set_pixel_pos_from_file()
 
-        elif camera_type == 'flash':
+        elif self.camera_type in ['flash', '2']:
             self.type="mst"
             self.focal = MST_FOCAL
-            self.pixpos_filename = 'share/cameras/PosPixel_0.txt'
+            self.pixpos_filename = pschitt_dir + 'share/cameras/PosPixel_2.txt'
             self.set_pixel_pos_from_file()
 
-        elif camera_type == 'lst_cam':
+        elif self.camera_type in ['lst_cam', '0']:
             self.type="lst"
             self.focal = LST_FOCAL
-            self.pixpos_filename = 'share/cameras/PosPixel_0.txt'
+            self.pixpos_filename = pschitt_dir + 'share/cameras/PosPixel_0.txt'
             self.set_pixel_pos_from_file()
 
         else:
-            print("The camera type {0} is not recognised. A square camera will be set by default.")
+            print("The camera type {0} is not recognised. A square camera will be set by default.".format(self.camera_type))
             self.camera_type = 'default'
             self.set_default_cam()
 
@@ -574,9 +578,15 @@ def image_point_pfo(point, telescope):
 def load_telescopes(filename, normal = [0,0,1]):
     """
     Load telescopes positions and pointing direction from data file
-    :param filename: string - name of the data file
-    :param normal: array - pointing direction
-    :return: list of telescope classes
+
+    Parameters
+    ----------
+    filename : string - name of the data file
+    normal : array - pointing direction vector
+
+    Returns
+    -------
+    list of Telescope classes
     """
     tels = []
     with open(filename, 'r') as f:
@@ -584,9 +594,9 @@ def load_telescopes(filename, normal = [0,0,1]):
     for line in read_data:
         if not line[0]=='#':
             t = line.split()
-            tel = Telescope([float(t[1]),float(t[2]),float(t[3])],normal,int(t[0]))
+            tel = Telescope([float(t[1]),float(t[2]),float(t[3])], normal, t[0])
             tels.append(tel)
-    print(len(tels), " telescopes loaded")
+    print("{0} telescopes loaded".format(len(tels)))
     return tels
 
 
