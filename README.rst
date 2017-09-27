@@ -11,8 +11,6 @@ It is intended to model atmospheric showers and image them with Imaging Atmosphe
 
 Install:
 
-python setup.py install
-
 python setup.py develop
 
 install requires:
