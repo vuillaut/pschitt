@@ -20,6 +20,7 @@ setup(name='pschitt',
           # 'matplotlib>=2.0',
           # 'numba'
       ],
+      packages=['pschitt'],
       tests_require=['pytest'],
       author='Thomas Vuillaume',
       author_email='thomas.vuillaume@lapp.in2p3.fr',
