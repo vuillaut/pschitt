@@ -53,7 +53,7 @@ def plot_shower3d(shower, alltel, **options):
         plt.savefig(outfile + '.eps', format='eps', dpi=200)
 
 
-def display_camera_image(telescope):
+def display_camera_image(telescope, figsize=(8,8)):
     """
     display an image of the camera of the telescope
     Parameters
@@ -61,7 +61,8 @@ def display_camera_image(telescope):
     telescope : telescope class
     histogram : histogram of the signal in each pixel
     """
-    plt.scatter(telescope.pixel_tab[:, 0], telescope.pixel_tab[:, 1], c=telescope.signal_hist)
+    plt.figure(figsize=figsize)
+    plt.scatter(telescope.pixel_tab[:, 0], telescope.pixel_tab[:, 1], c=telescope.signal_hist, s=27)
     plt.axis('equal')
     plt.colorbar(label='counts')
     plt.show()
