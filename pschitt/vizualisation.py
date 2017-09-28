@@ -33,7 +33,7 @@ def plot_shower3d(shower, alltel, **options):
     ax.add_patch(ip)
     art3d.pathpatch_2d_to_3d(ip, z=tel.mirror_center[2], zdir='z')
 
-    values = shower.array.T
+    values = shower.particles.T
 
     if options.get("density_color") == True:
         kde = stats.gaussian_kde(values)

@@ -44,7 +44,7 @@ def find_closest_pixel(pos, pixel_tab):
     return D2.argmin()
 
 
-
+@jit
 def photons_to_signal(photon_pos_tab, pixel_tab):
     """
     Count the number of photons in each pixel of the pixel_tab (camera)
@@ -67,6 +67,35 @@ def photons_to_signal(photon_pos_tab, pixel_tab):
             count[D2.argmin()] += 1
 
     return count
+
+
+@jit
+def pixel_in_camera(distances, dist_max2):
+    argmin = distances.argmin()
+    # if distances[argmin] < dist_max2:
+    #     return distances.argmin()
+    # else:
+    #     return -1
+    return (-1 * distances[argmin] > dist_max2) + argmin * (distances[argmin] <= dist_max2)
+
+
+def photons_to_signal_2(photon_pos_tab, pixel_tab):
+    """
+    alternative to photons_to_signal with smart coding.
+    performances are similar to photons_to_signal when @jit is used
+    Parameters
+    ----------
+    photon_pos_tab: Numpy 2D array shape (N,2) with the position of the photons in the camera frame
+    pixel_tab: Numpy 2D array with the positions of the pixels in the camera frame
+
+    Returns
+    -------
+    Numpy 1D array with the signal in each pixel
+    """
+    d_max2 = (pixel_tab[:, 0] ** 2 + pixel_tab[:, 1] ** 2).max()
+    pixel_id = np.array([pixel_in_camera(np.sum((p-pixel_tab)**2, axis=1), d_max2) for p in photon_pos_tab])
+    return np.bincount(pixel_id[pixel_id >= 0], minlength=len(pixel_tab))
+
 
 
 def write_camera_image(pix_hist, filename="data/camera_image.txt"):
@@ -148,7 +177,8 @@ def shower_image_in_camera(telescope, photon_pos_tab, lam=0, impact_distance=0, 
     Numpy 1D array with the photon count in each pixel
     """
     pixels_signal = photons_to_signal(photon_pos_tab, telescope.pixel_tab)
-    pixels_signal = pixels_signal * emi.emission_coef(impact_distance)
+
+    # pixels_signal = pixels_signal * emi.emission_coef(impact_distance)
     pixels_signal = add_noise_gaussian(pixels_signal, lam)
     if result_filename:
         write_camera_image(pix_hist, result_filename)
@@ -189,13 +219,13 @@ def shower_camera_image(shower, tel, noise = 0, shower_direction=None):
     """
 
     if shower_direction==None:
-        direction = np.array(shower.array[shower.array[:, 2].argmin()] - shower.array[shower.array[:, 2].argmax()])
+        direction = np.array(shower.particles[shower.particles[:, 2].argmin()] - shower.particles[shower.particles[:, 2].argmax()])
     else:
         direction = shower_direction
     direction = direction/np.sqrt((direction**2).sum())
-    visible = geo.mask_visible_particles(tel, shower.array, direction)
+    visible = geo.mask_visible_particles(tel, shower.particles, direction)
     # visible = np.ones(len(shower), dtype=bool)
-    shower_image = geo.image_shower_pfo(shower.array[visible], tel)
+    shower_image = geo.image_shower_pfo(shower.particles[visible], tel)
     shower_cam = geo.site_to_camera_cartesian(shower_image, tel)
     impact_distance = np.sqrt(np.sum((shower.impact_point - tel.mirror_center)**2))
     tel.signal_hist = shower_image_in_camera(tel, shower_cam[:, [0, 1]], noise, impact_distance=impact_distance)

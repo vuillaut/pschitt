@@ -24,7 +24,7 @@ class shower:
         self.impact_point = [0,0,0]
         self.energy_primary = 0
         self.number_of_particles = 10
-        self.array = np.empty((3,self.number_of_particles))
+        self.particles = np.empty((3,self.number_of_particles))
 
     def linear_segment(self, shower_first_interaction, shower_bot):
         """
@@ -34,7 +34,7 @@ class shower:
         shower_first_interaction: 1D Numpy array - position of the first interaction point
         shower_bot: 1D Numpy array - position of the bottom of the shower
         """
-        self.array = linear_segment(shower_first_interaction, shower_bot, self.number_of_particles)
+        self.particles = linear_segment(shower_first_interaction, shower_bot, self.number_of_particles)
 
 
     def random_surface_sphere(self, shower_center, shower_radius):
@@ -46,11 +46,11 @@ class shower:
         shower_center: 1D Numpy array
         shower_radius: float
         """
-        self.array = random_surface_sphere(shower_center, shower_radius, self.number_of_particles)
+        self.particles = random_surface_sphere(shower_center, shower_radius, self.number_of_particles)
 
 
     def random_surface_ellipsoide(self, shower_center, shower_length, shower_width):
-        self.array = random_surface_ellipsoide(shower_center, shower_length, shower_width, self.number_of_particles)
+        self.particles = random_surface_ellipsoide(shower_center, shower_length, shower_width, self.number_of_particles)
 
 
     def random_ellipsoide_alongz(self, shower_center, shower_length, shower_width):
@@ -68,7 +68,7 @@ class shower:
         -------
         Numpy array (3,n) - positions of particles in shower
         """
-        self.array = random_ellipsoide_alongz(shower_center, shower_length, shower_width, self.number_of_particles)
+        self.particles = random_ellipsoide_alongz(shower_center, shower_length, shower_width, self.number_of_particles)
 
 
     def gaussian_ellipsoide_alongz(self, shower_center, shower_length, shower_width):
@@ -80,7 +80,7 @@ class shower:
         shower_length
         shower_width
         """
-        self.array = gaussian_ellipsoide_alongz(shower_center, shower_length, shower_width, self.number_of_particles)
+        self.particles = gaussian_ellipsoide_alongz(shower_center, shower_length, shower_width, self.number_of_particles)
 
 
     def gaussian_ellipsoide(self, shower_top_altitude, shower_length, shower_width):
@@ -92,7 +92,7 @@ class shower:
         shower_length
         shower_width
         """
-        self.array = gaussian_ellipsoide(shower_top_altitude, shower_length, shower_width, \
+        self.particles = gaussian_ellipsoide(shower_top_altitude, shower_length, shower_width, \
                                          self.alt, self.az, self.impact_point, self.number_of_particles)
 
 
@@ -104,14 +104,14 @@ class shower:
         alt: float
         az: float
         """
-        self.array = shower_array_rot(self.array, alt, az)
+        self.particles = shower_array_rot(self.particles, alt, az)
 
 
     def plot3d(self):
         """
         Make a 3d plot
         """
-        plot3d(self.array)
+        plot3d(self.particles)
 
 
     def random_ellipsoide(self, shower_top_altitude, shower_length, shower_width):
@@ -131,7 +131,7 @@ class shower:
         -------
         list of points in the shower (3-floats arrays)
         """
-        self.array = random_ellipsoide(shower_top_altitude, shower_length, shower_width, \
+        self.particles = random_ellipsoide(shower_top_altitude, shower_length, shower_width, \
                                        self.alt, self.az, self.impact_point, self.number_of_particles)
 
 
@@ -344,7 +344,7 @@ def rotated_shower(shower, alt, az):
     copy of the given shower but rotated
     """
     rot_shower = copy(shower)
-    rot_shower.array = shower_array_rot(shower.array, shower.alt, shower.az)
+    rot_shower.particles = shower_array_rot(shower.particles, shower.alt, shower.az)
     return rot_shower
 
 

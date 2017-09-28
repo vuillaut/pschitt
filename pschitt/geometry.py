@@ -923,3 +923,48 @@ def mask_visible_particles(telescope, shower, shower_direction):
     mask = 1D Numpy array of boolean with the same length as the shower array
     """
     return np.array([is_particle_visible(particle, shower_direction, 1, telescope) for particle in shower])
+
+
+def distance_shower_particles_to_point(shower, point):
+    """
+    Compute the distance between all shower particles to a fix point in space
+    Parameters
+    ----------
+    shower: class shower
+    point: 1D numpy array of three floats
+
+    Returns
+    -------
+    numpy array of the distances. size = number of particles in the shower.
+    """
+    return np.sqrt(np.sum((shower.particles - point)**2, axis=1))
+
+
+def distance_shower_camera_center(shower, tel):
+    """
+    Compute the distance between all shower particles and the telescope camera center
+    Parameters
+    ----------
+    shower: class shower
+    tel: class telescope
+
+    Returns
+    -------
+    numpy array of the distances. size = number of particles in the shower.
+    """
+    return distance_shower_particles_to_point(shower, tel.camera_center)
+
+
+def angle(direction1, direction2):
+    """
+    Compute the angle between point1, direction and point2
+    Parameters
+    ----------
+    direction1: 3 floats numpy array
+    direction2: 3 floats numpy array
+
+    Returns
+    -------
+    float: angle in radians
+    """
+    return np.arccos(np.dot(direction1, direction2) / (vector_norm(direction1)*vector_norm(direction2)))

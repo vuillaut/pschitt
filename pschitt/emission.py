@@ -1,22 +1,22 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 
+from . import geometry as geo
+import numpy as np
 
-def emission_coef(distance_impact):
+
+def transmission(distances):
     """
-    Compute a coefficient between 0 and 1 taking into accounts all radiative transfer effects
-
+    Compute the transmission coefficient between 0 and 1 taking into accounts all radiative transfer effects
+    1 corresponds to a complete transmission (no absorption)
     Parameters
     ----------
-    distance_impact: float, distance to impact parameter
-
+    distances: numpy array of atmospheric length to go through
 
     Returns
     -------
-    float between 0 and 1
+    numpy array of floats between 0 and 1 for all distances
     """
-    ep = emission_profile(distance_impact)
-    abs = 0
-    return ep * (1-abs)
+    return np.ones(len(distances))
 
 
 def emission_profile(dist):
@@ -99,15 +99,67 @@ def ground_profile_1(dist, shift=120):
     return (dist<=shift) * 1. + (dist>shift) * 1./(dist - shift)
 
 
-# def model3D_profile(angle):
-#     """
-#     Emission profile used in model3D
-#     Parameters
-#     ----------
-#     angle: float - solid angle to the shower axis
-#
-#     Returns
-#     -------
-#     Emission probability
-#     """
-#     return 150 *( (angle<=1) + (angle>1)
+def angular_profile_heaviside(angles, limit):
+    """
+    Emission profile depending on the angle from particle axis.
+    The emission profile is 1 below the limit angle and 0 above.
+    Parameters
+    ----------
+    angle: numpy array - angles to the particle axis
+
+    Returns
+    -------
+    numpy array with same shape as angles giving the emission probabilities
+    """
+    return 1 * (angles <= limit)
+
+
+def angular_profile_exp_falloff(angles, break_angle, alpha):
+    """
+    Profile equals to one until the break_angle then exponential decrease with coef -alpha
+
+    Parameters
+    ----------
+    angles: numpy array
+    break_angle: float
+    alpha: float
+
+    Returns
+    -------
+    numpy array with same shape as angles
+    """
+    return 1 * (angles < break_angle) + np.exp(-alpha*(angles - break_angle)) * (angles >= break_angle)
+
+
+def flux_portion_in_telescope(tel, shower, angular_profile, *args):
+    """
+    Compute the attenuation factor for the photons from the shower.
+    It takes into account the position of the telescope and shower direction and impact parameter
+    to get the rate of Cherenkov photons.
+
+    Parameters
+    ----------
+    tel: telescope class
+    shower: shower class
+    angular_profile: function to use for the angular_profile of the Cherenkov emission
+    *args: arguements of the function angular_profile
+
+    Returns
+    -------
+    numpy array of booleans of length = len(shower.particles)
+    """
+    # Compute the air transmission coefficient for each particle:
+    particle_distances = geo.distance_shower_camera_center(shower, tel)
+    transmissions = transmission(particle_distances)
+
+    # Compute the transmission profile relative to Cherenkov cone for each particle:
+    shower_direction = geo.altaz_to_normal(shower.alt, shower.az)
+    angles = np.array([geo.angle(shower_direction, particle - tel.mirror_center) for particle in shower.particles])
+
+    # The resulting transmission probability is the product of both:
+    p_trans = transmissions * angular_profile(angles, *args)
+
+    mask_transmitted_particles = p_trans > np.random.rand(len(shower.particles))
+
+    return mask_transmitted_particles
+
