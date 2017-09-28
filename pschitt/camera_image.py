@@ -7,6 +7,7 @@ Functions to compute and display camera images
 
 import numpy as np
 from . import geometry as geo
+from . import emission as em
 from numba import jit
 from . import emission as emi
 from multiprocessing import Pool
@@ -160,7 +161,7 @@ def add_noise_gaussian(signal, lam=10):
 
 
 
-def shower_image_in_camera(telescope, photon_pos_tab, lam=0, impact_distance=0, result_filename=None):
+def shower_image_in_camera(telescope, photon_pos_tab, lam=0, result_filename=None):
     """
     Compute the camera image given the positions of the photons in the camera frame.
     Poissonian noise can be added if lambda > 0
@@ -168,7 +169,7 @@ def shower_image_in_camera(telescope, photon_pos_tab, lam=0, impact_distance=0, 
     Parameters
     ----------
     telescope: telescope class
-    photon_pos_tab: Numpy 2D array with the cartesian positions of the the photons in the camera frame [[x1,y1],[x2,y2],...]
+    photon_pos_tab: Numpy 2D array with the cartesian positions of the photons in the camera frame [[x1,y1],[x2,y2],...]
     lam: lambda for the poissonian noise
     result_filename: string, name of file to write the resulting image
 
@@ -178,7 +179,6 @@ def shower_image_in_camera(telescope, photon_pos_tab, lam=0, impact_distance=0, 
     """
     pixels_signal = photons_to_signal(photon_pos_tab, telescope.pixel_tab)
 
-    # pixels_signal = pixels_signal * emi.emission_coef(impact_distance)
     pixels_signal = add_noise_gaussian(pixels_signal, lam)
     if result_filename:
         write_camera_image(pix_hist, result_filename)
@@ -204,7 +204,7 @@ def threshold_pass(pix_signal, threshold):
         return False
 
 
-def shower_camera_image(shower, tel, noise = 0, shower_direction=None):
+def shower_camera_image(shower, tel, noise = 0):
     """
     Given a shower object and a telescope, compute the image of the shower in the camera
     Background noise can be added
@@ -218,17 +218,30 @@ def shower_camera_image(shower, tel, noise = 0, shower_direction=None):
     Numpy 1D array of the photon count in each pixel of the telescope camera
     """
 
-    if shower_direction==None:
-        direction = np.array(shower.particles[shower.particles[:, 2].argmin()] - shower.particles[shower.particles[:, 2].argmax()])
-    else:
-        direction = shower_direction
+    direction = geo.altaz_to_normal(shower.alt, shower.az)
+    # if shower_direction==None:
+    #     direction = np.array(shower.particles[shower.particles[:, 2].argmin()]
+    #                          - shower.particles[shower.particles[:, 2].argmax()])
+    # else:
+    #     direction = shower_direction
     direction = direction/np.sqrt((direction**2).sum())
     visible = geo.mask_visible_particles(tel, shower.particles, direction)
     # visible = np.ones(len(shower), dtype=bool)
-    shower_image = geo.image_shower_pfo(shower.particles[visible], tel)
+    # shower_image = geo.image_shower_pfo(shower.particles[visible], tel)
+
+    shower_image = geo.image_shower_pfo(shower.particles, tel)
     shower_cam = geo.site_to_camera_cartesian(shower_image, tel)
     impact_distance = np.sqrt(np.sum((shower.impact_point - tel.mirror_center)**2))
-    tel.signal_hist = shower_image_in_camera(tel, shower_cam[:, [0, 1]], noise, impact_distance=impact_distance)
+
+    # Only part of the photons reach the telescope camera due to absorption
+    break_angle = 0.01
+    alpha = 100
+    mask = em.mask_transmitted_particles(tel, shower, em.angular_profile_exp_falloff, break_angle, alpha)
+    photons_in_camera = shower_cam[:, [0, 1]][mask]
+
+    #
+
+    tel.signal_hist = shower_image_in_camera(tel, photons_in_camera, noise)
     return tel.signal_hist
 
 

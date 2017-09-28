@@ -131,11 +131,11 @@ def angular_profile_exp_falloff(angles, break_angle, alpha):
     return 1 * (angles < break_angle) + np.exp(-alpha*(angles - break_angle)) * (angles >= break_angle)
 
 
-def flux_portion_in_telescope(tel, shower, angular_profile, *args):
+def mask_transmitted_particles(tel, shower, angular_profile, *args):
     """
-    Compute the attenuation factor for the photons from the shower.
-    It takes into account the position of the telescope and shower direction and impact parameter
-    to get the rate of Cherenkov photons.
+    Compute a masking array for the photons from the shower to know if they reach the telescope
+    depending on their transmission probability.
+    It takes into account the position of the telescope and shower direction and impact parameter.
 
     Parameters
     ----------
