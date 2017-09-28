@@ -123,6 +123,8 @@ class Telescope:
             self.camera_type = 'default'
             self.set_default_cam()
 
+        self.pixel_size = get_pixel_size(self.pixel_tab)
+
 
     def display_info(self):
         """Just display some info about telescope and camera"""
@@ -150,6 +152,23 @@ class Telescope:
         self.normal = np.array(point) - self.camera_center
         self.normal = self.normal / np.sqrt((self.normal ** 2).sum())
 
+
+def get_pixel_size(pixel_tab):
+    """
+    Compute the size of a pixel from the array of pixels positions assuming that all pixels have the same size
+    and that the grid is regular and without holes between pixels
+    The pixel size corresponds to its longest length between two edges points
+    Parameters
+    ----------
+    pixel_tab: numpy array (N,2)
+
+    Returns
+    -------
+    float
+    """
+    pix = pixel_tab[0]
+    d2 = np.sum((pixel_tab - pix) ** 2, axis=1)
+    return np.sqrt(d2[d2>0].min())
 
 
 def plane_array(point, normal):
