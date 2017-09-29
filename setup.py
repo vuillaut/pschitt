@@ -21,6 +21,7 @@ setup(name='pschitt',
           # 'numba'
       ],
       packages=['pschitt'],
+      package_data={'pschitt': ['data/*.dat']},
       tests_require=['pytest'],
       author='Thomas Vuillaume',
       author_email='thomas.vuillaume@lapp.in2p3.fr',

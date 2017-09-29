@@ -1,0 +1,9 @@
+Developments to be done:
+
+- handle the different camera sizes
+
+- object shape closer to a shower's one
+
+- particles emitting in a cone = visible only if the telescope is this cone: compute this cone for each particle, determine if the telescope is in the cone (is_particle_visible)
+
+- transmission coefficient in the air for each particle as a function of the distance to the telescope. first step: boolean, particle visible if transmission coefficient above a limit
