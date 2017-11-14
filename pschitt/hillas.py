@@ -183,10 +183,12 @@ def coef_hillas_ponderation(hillas_parameters_1, hillas_parameters_2):
     Float - weight
     """
     phi1 = hillas_parameters_1[6]
+    psi1 = hillas_parameters_1[7]
     intensity1 = hillas_parameters_1[0]
     width1 = hillas_parameters_1[4]
     length1 = hillas_parameters_1[3]
     phi2 = hillas_parameters_2[6]
+    psi2 = hillas_parameters_2[7]
     intensity2 = hillas_parameters_2[0]
     width2 = hillas_parameters_2[4]
     length2 = hillas_parameters_2[3]
@@ -198,9 +200,9 @@ def coef_hillas_ponderation(hillas_parameters_1, hillas_parameters_2):
     r = (gx1*gx1 + gy1*gy1 + gx2*gx2 + gy2*gy2)**6
 
     if r < 1e-6:
-        return fabs(sin(phi1 - phi2)) / ((1.0/intensity1 + 1.0/intensity2) + (width1/length1 + width2/length2))
+        return fabs(sin(psi1 - psi2)) / ((1.0/intensity1 + 1.0/intensity2) + (width1/length1 + width2/length2))
     else:
-        return fabs(sin(phi1 - phi2)) / ( (1.0/intensity1 + 1.0/intensity2 + width1/length1 + width2/length2) * r)
+        return fabs(sin(psi1 - psi2)) / ( (1.0/intensity1 + 1.0/intensity2 + width1/length1 + width2/length2) * r)
 
 
 def impact_parameter_ponderated(alltel, HillasParameters):
