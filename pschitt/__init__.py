@@ -4,3 +4,4 @@ from . import emission
 from . import geometry
 from . import sky_objects
 from . import vizualisation
+from . import dataset

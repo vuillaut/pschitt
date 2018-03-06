@@ -1,10 +1,21 @@
 #!/usr/bin/env python
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import sys
-
-# import ah_bootstrap
+# import sys
+import os
 from setuptools import setup
 
+
+
+def package_files(directory):
+    paths = []
+    for (path, directories, filenames) in os.walk(directory):
+        for filename in filenames:
+            paths.append(os.path.join('.', path, filename))
+    return paths
+
+dataset = package_files('share')
+
+print("dataset {}".format(dataset))
 
 
 setup(name='pschitt',
@@ -33,5 +44,6 @@ setup(name='pschitt',
           'Programming Language :: Python :: 3',
           'Topic :: Scientific/Engineering :: Astronomy',
           'Development Status :: 3 - Alpha',
-      ]
+      ],
+      data_files=[('./share', dataset)],
       )
