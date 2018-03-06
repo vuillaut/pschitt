@@ -529,6 +529,17 @@ def image_shower_pfi(shower, telescope):
 
 
 def image_shower_pfo(shower, telescope):
+    """
+    Compute the image of a shower in the object focal plane (plane of the camera) as seen by a telescope
+    Parameters
+    ----------
+    shower: list of points coordinates [X,Y,Z]
+    telescope: telescope class
+
+    Returns
+    -------
+    list of points coordinates [X,Y,Z] of the shower image
+    """
     image_pfi = image_shower_pfi(shower, telescope)
     return image_pfi + 2.0 * telescope.focal * telescope.normal
 
@@ -608,6 +619,7 @@ def load_telescopes(filename, normal = [0,0,1]):
     list of Telescope classes
     """
     tels = []
+
     with open(filename, 'r') as f:
         read_data = f.readlines()
     for line in read_data:
