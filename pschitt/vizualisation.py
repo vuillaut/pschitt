@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import mpl_toolkits.mplot3d.art3d as art3d
 from scipy import stats
+from . import geometry as geo
 
 
 def plot_shower3d(shower, alltel, **options):
@@ -53,7 +54,7 @@ def plot_shower3d(shower, alltel, **options):
         plt.savefig(outfile + '.eps', format='eps', dpi=200)
 
 
-def display_camera_image(telescope, figsize=(8,8)):
+def display_camera_image(telescope, ax=None, **kwargs):
     """
     display an image of the camera of the telescope
     Parameters
@@ -61,30 +62,50 @@ def display_camera_image(telescope, figsize=(8,8)):
     telescope : telescope class
     histogram : histogram of the signal in each pixel
     """
-    plt.figure(figsize=figsize)
-    plt.scatter(telescope.pixel_tab[:, 0], telescope.pixel_tab[:, 1], c=telescope.signal_hist, s=27)
-    plt.axis('equal')
-    plt.colorbar(label='counts')
-    plt.show()
+
+    ax = plt.gca() if ax is None else ax
+
+    if not 's' in kwargs:
+        kwargs['s'] = 27
+    if not 'c' in kwargs:
+        kwargs['c'] = telescope.signal_hist
+
+    fig = ax.scatter(telescope.pixel_tab[:, 0], telescope.pixel_tab[:, 1], **kwargs)
+    ax.axis('equal')
+    plt.colorbar(fig, ax=ax, label='counts')
+
+    return ax
 
 
-def display_stacked_cameras(telescope_array):
+def display_stacked_cameras(telescope_array, ax=None, **kwargs):
     """
     Display stacked camera images. This only works if all the telescope camera are the same type.
     Parameters
     ----------
     telescope_array: list of telescopes classes
     """
+
+    ax = plt.gca() if ax is None else ax
+
     tel0 = telescope_array[0]
     l0 = len(tel0.signal_hist)
-    assert np.all([len(tel.signal_hist) == l0 for tel in telescope_array])
+    assert np.all([len(tel.signal_hist) == l0 for tel in telescope_array]), \
+        "Impossible to stack cameras with different shapes"
+
     stacked_hist = np.zeros(l0)
+
     for tel in telescope_array:
         stacked_hist += tel.signal_hist
 
-    plt.scatter(tel0.pixel_tab[:, 0], tel0.pixel_tab[:, 1], c=stacked_hist)
-    plt.axis('equal')
-    plt.colorbar(label='counts')
+    if not 'c' in kwargs:
+        kwargs['c'] = stacked_hist
+
+    fig = ax.scatter(tel0.pixel_tab[:, 0], tel0.pixel_tab[:, 1], **kwargs)
+    ax.axis('equal')
+    plt.colorbar(fig, label='counts', ax=ax)
+
+    return ax
+
 
 
 def display_pointing_tel(tel, show=True):
@@ -125,17 +146,46 @@ def display_pointing_array(alltel):
     plt.show()
 
 
-def plot_array(telescope_array):
+def plot_array(telescope_array, ax=None, **kwargs):
     """
     Plot a map of the telescopes array
+
     Parameters
     ----------
     telescope_array: list of telescopes classes
     """
+
+    ax = plt.gca() if ax is None else ax
+
     for tel in telescope_array:
-        plt.scatter(tel.mirror_center[0], tel.mirror_center[1])
-        plt.annotate(str(tel.id), (tel.mirror_center[0] + 20, tel.mirror_center[1] + 20))
-    plt.axis('equal')
-    plt.legend()
-    plt.xlabel("x [m]")
-    plt.ylabel("y [m]")
+        ax.scatter(tel.mirror_center[0], tel.mirror_center[1])
+        ax.annotate(str(tel.id), (tel.mirror_center[0] + 20, tel.mirror_center[1] + 20))
+    ax.axis('equal')
+    ax.set_xlabel("x [m]")
+    ax.set_ylabel("y [m]")
+
+    return ax
+
+
+def plot_array_reconstructed(triggered_telescopes, hillas_parameters, impact_point, ax=None, **kwargs):
+
+
+    ax = plt.gca() if ax is None else ax
+
+    ax = plot_array(triggered_telescopes, ax=ax)
+
+    x = np.linspace(-300, 300)
+
+    for (tel, hp) in zip(triggered_telescopes, hillas_parameters):
+        alt, az = geo.normal_to_altaz(tel.normal)
+        psi_g = geo.direction_ground(hp[7] + np.pi/2., alt, az)
+        ax.plot(x * np.cos(psi_g) + tel.mirror_center[0], x * np.sin(psi_g) + tel.mirror_center[1], **kwargs)
+
+    ax.scatter(impact_point[0], impact_point[1], color='black', label='Impact point', marker='X', s=80)
+
+    ax.set_xlabel("X [m]")
+    ax.set_ylabel("Y [m]")
+    ax.axis('equal')
+    ax.legend()
+
+    return ax

@@ -302,8 +302,8 @@ def site_to_camera_cartesian(shower, telescope):
     This is done for the whole shower at once.
     Parameters
     ----------
-    shower
-    telescope
+    shower: 2D numpy array
+    telescope: telescope class
 
     Returns
     -------
@@ -387,16 +387,16 @@ def camera_base(telescope):
     :param telescope: telescope class
     :return: array
     """
-    # if not(np.array_equal(telescope.normal,[0,0,1])):
-    #     e2 = np.cross([0,0,1],telescope.normal)
-    #     e1 = np.cross(e2,telescope.normal)
-    # else:
-    #     e1 = [1,0,0]
-    #     e2 = [0,1,0]
+    if not(np.array_equal(telescope.normal,[0,0,1])):
+        e2 = np.cross([0,0,1],telescope.normal)
+        e1 = np.cross(e2,telescope.normal)
+    else:
+        e1 = [1,0,0]
+        e2 = [0,1,0]
     #e2 = np.cross([0,0,1],telescope.normal)
     #e1 = np.cross(e2,telescope.normal)
-    e2 = my_3d_cross([0, 0, 1], telescope.normal)
-    e1 = my_3d_cross(e2, telescope.normal)
+    # e2 = my_3d_cross([0, 0, 1], telescope.normal)
+    # e1 = my_3d_cross(e2, telescope.normal)
     e3 = list(telescope.normal)
     #return [e1/np.linalg.norm(e1),e2/np.linalg.norm(e2),e3/np.linalg.norm(e3)]
     return [my_normed_vec(e1), my_normed_vec(e2), my_normed_vec(e3)]
@@ -738,7 +738,7 @@ def barycenter_in_R(tel, cen_x, cen_y):
     return camera_frame_to_R(tel, [cen_x, cen_y, 0])
 
 
-def normal_vector_ellipse_plane(psi, alt, az):
+def normal_vector_ellipse_plane_old(psi, alt, az):
     n = [
     math.sin(alt) * math.cos(az) * math.cos(psi) - math.sin(az) * math.sin(psi),
     math.sin(alt) * math.sin(az) * math.cos(psi) + math.cos(az) * math.sin(psi),
@@ -748,7 +748,21 @@ def normal_vector_ellipse_plane(psi, alt, az):
 
 
 
-def normal_vector_ellipse_plane_new(psi, alt, az):
+def normal_vector_ellipse_plane(psi, alt, az):
+    """
+    Compute the normal vector to the ellipse direction given by psi.
+    (alt, az) gives the telescope pointing direction.
+
+    Parameters
+    ----------
+    psi: float
+    alt: float
+    az: float
+
+    Returns
+    -------
+    `numpy.ndarray`
+    """
     n = [
     - math.sin(alt) * math.sin(az) * math.cos(psi) - math.cos(az) * math.sin(psi),
     math.sin(alt) * math.cos(az) * math.cos(psi) - math.sin(az) * math.sin(psi),
@@ -758,6 +772,7 @@ def normal_vector_ellipse_plane_new(psi, alt, az):
 
 
 def normal_vector_ellipse_plane2(psi, alt, az):
+    """optimization tests """
     bb = np.matrix([math.cos(psi), math.sin(psi), 0]).T
     camera_base = camera_frame_base(alt, az)
     bb2 = (camera_base * bb).T.getA()[0]
@@ -766,6 +781,7 @@ def normal_vector_ellipse_plane2(psi, alt, az):
 
 
 def normal_vector_ellipse_plane3(psi, alt, az, barycenter_x, barycenter_y):
+    """optimization tests """
     camera_base = camera_frame_base(alt, az)
     ellipsevec = (camera_base * np.matrix([math.cos(psi), math.sin(psi), 0]).T).T.getA()[0]
     bco = (camera_base * np.matrix([-barycenter_x, -barycenter_y, 1]).T).T.getA()[0]
@@ -987,3 +1003,52 @@ def angle(direction1, direction2):
     float: angle in radians
     """
     return np.arccos(np.dot(direction1, direction2) / (vector_norm(direction1)*vector_norm(direction2)))
+
+
+def ground_camera_projection(x, y, tel):
+    """
+    Compute the projection of a point in the camera to the ground.
+    Parameters
+    ----------
+    x: float - x position of the point in the camera
+    y: float - y position of the point in the camera
+    tel: telescope class
+
+    Returns
+    -------
+    (x_g, y_g): tuple of floats - position on the ground
+    """
+    telX = tel.camera_center[0]
+    telY = tel.camera_center[1]
+    telZ = tel.camera_center[2]
+    alt, az = geo.normal_to_altaz(tel.normal)
+
+    x_g = (x * np.sin(az) - y * np.cos(az) * np.sin(alt))
+    + telX
+    - telZ / np.tan(alt) * np.cos(az)
+    y_g = (y * np.cos(az) + y * np.sin(az) * np.sin(alt))
+    + telY
+    - telZ / np.tan(alt) * np.sin(az)
+
+    return x_g, y_g
+
+
+def direction_ground(psi, alt, az):
+    """
+    For a given direction in camera psi, and a pointing direction (alt, az),
+    return the direction in the site frame
+
+    Parameters
+    ----------
+    psi: float
+    alt: float
+    az: float
+
+    Returns
+    -------
+    float
+    """
+    dx = - np.cos(psi) * np.sin(az) - np.sin(psi) * np.cos(az) * np.sin(alt)
+    dy = -np.cos(psi) * np.cos(az) + np.sin(psi) * np.sin(az) * np.sin(alt)
+
+    return np.arctan2(dx, dy)

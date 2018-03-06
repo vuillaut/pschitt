@@ -7,6 +7,7 @@ from math import *
 
 
 
+
 def hillas_parameters(pix_x, pix_y, image):
     """
     Hillas parameters calculation.
@@ -71,67 +72,42 @@ def hillas_parameters(pix_x, pix_y, image):
 
 
 
-def reco_impact_parameter(hillas_parameters_1, tel1, hillas_parameters_2, alt2, az2, tel2, z=0):
+
+def reco_impact_parameter(hillas_parameters_1, tel1, hillas_parameters_2, tel2, z=0, ground_normal=[0,0,1]):
     """
-    Geometric reconstruction of the impact parameter
+    Compute the position of the shower impact parameter given hillas parameters of two telescopes
+
     Parameters
     ----------
-    hillas_parameters_1: Hillas parameters of the first telescope
-    alt1: pointing altitude of first telescope
-    az1: pointing azimuth of first telescope
-    tel1: first telescope class
-    hillas_parameters_2: Hillas parameters of the second telescope
-    alt2: pointing altitude of second telescope
-    az2: pointing azimuth of second telescope
-    tel2: second telescope class
-    z: Plan in which to compute the impact parameter
+    hillas_parameters_1: list
+    tel1: telescope Class
+    hillas_parameters_2: list
+    tel2: telescope Class
+    z: ground plan altitude
 
     Returns
     -------
-    1D Numpy array - position in space of the impact parameter
+    `numpy.ndarray`
     """
+
     cen_x1 = hillas_parameters_1[1]
     cen_y1 = hillas_parameters_1[2]
-    psi1 = hillas_parameters_1[6]
+    alt1, az1 = geo.normal_to_altaz(tel1.normal)
+    psi1 = geo.direction_ground(hillas_parameters_1[7] + np.pi/2., alt1, az1)
+
     cen_x2 = hillas_parameters_2[1]
     cen_y2 = hillas_parameters_2[2]
-    psi2 = hillas_parameters_2[6]
-
-    alt1, az1 = geo.normal_to_altaz(tel1.normal)
     alt2, az2 = geo.normal_to_altaz(tel2.normal)
+    psi2 = geo.direction_ground(hillas_parameters_2[7] + np.pi/2., alt2, az2)
+
 
     barycenter1 = geo.barycenter_in_R(tel1, cen_x1, cen_y1)
     barycenter2 = geo.barycenter_in_R(tel2, cen_x2, cen_y2)
 
-    n1 = geo.normal_vector_ellipse_plane(psi1, alt1, az1)
-    n2 = geo.normal_vector_ellipse_plane(psi2, alt2, az2)
-    n3 = np.array([0, 0, 1])
+    alt_g, az_g = geo.normal_to_altaz(ground_normal)
 
-    A = np.array([n1, n2, n3])
-    B = np.array([np.dot(n1, barycenter1), np.dot(n2, barycenter2), z])
-    X = np.linalg.solve(A,B)
-    return X
-
-
-def reco_impact_parameter_test(hillas_parameters_1, tel1, hillas_parameters_2, tel2, z=0):
-    cen_x1 = hillas_parameters_1[1]
-    cen_y1 = hillas_parameters_1[2]
-    psi1 = hillas_parameters_1[6]
-    cen_x2 = hillas_parameters_2[1]
-    cen_y2 = hillas_parameters_2[2]
-    psi2 = hillas_parameters_2[6]
-
-    psi1 = hillas_parameters_1[7] + np.pi/2.
-    psi2 = hillas_parameters_2[7] + np.pi/2.
-
-    barycenter1 = geo.barycenter_in_R(tel1, cen_x1, cen_y1)
-    barycenter2 = geo.barycenter_in_R(tel2, cen_x2, cen_y2)
-
-    alt1, az1 = geo.normal_to_altaz(tel1.normal)
-    alt2, az2 = geo.normal_to_altaz(tel2.normal)
-
-    n1 = geo.normal_vector_ellipse_plane_new(psi1, alt1, az1)
-    n2 = geo.normal_vector_ellipse_plane_new(psi2, alt2, az2)
+    n1 = geo.normal_vector_ellipse_plane(psi1, alt_g, az_g + np.pi/2.)
+    n2 = geo.normal_vector_ellipse_plane(psi2, alt_g, az_g + np.pi/2.)
     n3 = np.array([0, 0, 1])
 
 
@@ -163,7 +139,7 @@ def impact_parameter_average(alltel, HillasParameters):
             #if(j != i):
             hp1 = HillasParameters[i]
             hp2 = HillasParameters[j]
-            p = reco_impact_parameter_test(hp1, alltel[i], hp2, alltel[j], 0)
+            p = reco_impact_parameter(hp1, alltel[i], hp2, alltel[j], 0)
             P.append(p)
     P = np.array(P)
     return [P[:,0].mean(), P[:,1].mean(), P[:,2].mean()]
@@ -182,12 +158,12 @@ def coef_hillas_ponderation(hillas_parameters_1, hillas_parameters_2):
     -------
     Float - weight
     """
-    phi1 = hillas_parameters_1[6]
+    # phi1 = hillas_parameters_1[6]
     psi1 = hillas_parameters_1[7]
     intensity1 = hillas_parameters_1[0]
     width1 = hillas_parameters_1[4]
     length1 = hillas_parameters_1[3]
-    phi2 = hillas_parameters_2[6]
+    # phi2 = hillas_parameters_2[6]
     psi2 = hillas_parameters_2[7]
     intensity2 = hillas_parameters_2[0]
     width2 = hillas_parameters_2[4]
@@ -197,7 +173,7 @@ def coef_hillas_ponderation(hillas_parameters_1, hillas_parameters_2):
     gx2 = hillas_parameters_2[1]
     gy2 = hillas_parameters_2[2]
 
-    r = (gx1*gx1 + gy1*gy1 + gx2*gx2 + gy2*gy2)**6
+    r = (gx1*gx1 + gy1*gy1 + gx2*gx2 + gy2*gy2)
 
     if r < 1e-6:
         return fabs(sin(psi1 - psi2)) / ((1.0/intensity1 + 1.0/intensity2) + (width1/length1 + width2/length2))
@@ -224,7 +200,7 @@ def impact_parameter_ponderated(alltel, HillasParameters):
             if(j != i):
                 hp1 = HillasParameters[i]
                 hp2 = HillasParameters[j]
-                p = reco_impact_parameter_test(hp1, alltel[i], hp2, alltel[j], 0)
+                p = reco_impact_parameter(hp1, alltel[i], hp2, alltel[j], 0)
                 c = coef_hillas_ponderation(hp1, hp2)
                 P.append(p)
                 C.append(c)
