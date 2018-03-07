@@ -4,9 +4,8 @@
 
 import numpy as np
 import math
-from . import camera_image as ci
-from . import vizualisation as viz
 import os
+from . import camera_image as ci
 from . import dataset as ds
 
 
@@ -138,13 +137,6 @@ class Telescope:
         print("normal ", self.normal)
         print("focal ", self.focal)
         print("Pixel position datafile ", self.pixpos_filename)
-
-
-    def display_camera(self):
-        """
-        Display a plot of the camera image
-        """
-        viz.display_camera_image(self)
 
 
     def pointing_object(self, point):
