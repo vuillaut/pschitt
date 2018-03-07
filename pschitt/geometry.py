@@ -7,6 +7,7 @@ import math
 from . import camera_image as ci
 from . import vizualisation as viz
 import os
+from . import dataset as ds
 
 
 DEF = -10000
@@ -45,9 +46,17 @@ class Telescope:
         self.camera_size = math.sqrt((self.pixel_tab[0]**2 +self.pixel_tab[0]**2).max())
         self.signal_hist = np.zeros(len(self.pixel_tab[0]))
 
-    def set_pixel_pos_from_file(self):
+    def set_pixel_pos_from_file(self, file):
+        """
+        set pixels positions from a configuration file
+
+        Parameters
+        ----------
+        file: `str`
+        """
         try:
-            self.pixel_tab = ci.read_pixel_pos(self.pixpos_filename)
+            self.pixel_tab = ci.read_pixel_pos(file)
+            self.pixpos_filename = file
         except:
             print("Cannot load the file {0}" \
             "A standard array of pixel positions will be used instead".format(self.pixpos_filename, Telescope.id))
@@ -79,44 +88,37 @@ class Telescope:
         elif self.camera_type in ['astri', '4']:
             self.type = "sst"
             self.focal = SST_FOCAL
-            self.pixpos_filename = pschitt_dir + 'share/cameras/PosPixel_4.txt'
-            self.set_pixel_pos_from_file()
+            self.set_pixel_pos_from_file(ds.get('PosPixel_4.txt'))
 
         elif self.camera_type in ['gct', '6']:
             self.type="sst"
             self.focal = SST_FOCAL
-            self.pixpos_filename = pschitt_dir + 'share/cameras/PosPixel_6.txt'
-            self.set_pixel_pos_from_file()
+            self.set_pixel_pos_from_file(ds.get('PosPixel_6.txt'))
 
         elif self.camera_type in ['dc', '5']:
             self.type="sst"
             self.focal = SST_FOCAL
-            self.pixpos_filename = pschitt_dir + 'share/cameras/PosPixel_5.txt'
-            self.set_pixel_pos_from_file()
+            self.set_pixel_pos_from_file(ds.get('PosPixel_5.txt'))
 
         elif self.camera_type in ['sct', '3']:
             self.type="mst"
             self.focal = MST_FOCAL
-            self.pixpos_filename = pschitt_dir + 'share/cameras/PosPixel_3.txt'
-            self.set_pixel_pos_from_file()
+            self.set_pixel_pos_from_file(ds.get('PosPixel_3.txt'))
 
         elif self.camera_type in ['nectar', '1']:
             self.type="mst"
             self.focal = MST_FOCAL
-            self.pixpos_filename = pschitt_dir + 'share/cameras/PosPixel_1.txt'
-            self.set_pixel_pos_from_file()
+            self.set_pixel_pos_from_file(ds.get('PosPixel_1.txt'))
 
         elif self.camera_type in ['flash', '2']:
             self.type="mst"
             self.focal = MST_FOCAL
-            self.pixpos_filename = pschitt_dir + 'share/cameras/PosPixel_2.txt'
-            self.set_pixel_pos_from_file()
+            self.set_pixel_pos_from_file(ds.get('PosPixel_2.txt'))
 
         elif self.camera_type in ['lst_cam', '0']:
             self.type="lst"
             self.focal = LST_FOCAL
-            self.pixpos_filename = pschitt_dir + 'share/cameras/PosPixel_0.txt'
-            self.set_pixel_pos_from_file()
+            self.set_pixel_pos_from_file(ds.get('PosPixel_0.txt'))
 
         else:
             print("The camera type {0} is not recognised. A square camera will be set by default.".format(self.camera_type))

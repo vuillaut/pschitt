@@ -45,5 +45,5 @@ setup(name='pschitt',
           'Topic :: Scientific/Engineering :: Astronomy',
           'Development Status :: 3 - Alpha',
       ],
-      data_files=[('./share', dataset)],
+      data_files=[('pschitt/', dataset)],
       )
