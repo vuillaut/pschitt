@@ -189,3 +189,33 @@ def plot_array_reconstructed(triggered_telescopes, hillas_parameters, impact_poi
     ax.legend()
 
     return ax
+
+
+def plot_angular_emission_profile(emission_profile, *em_args, **plot_kwargs):
+    """
+    Plot an angular emission profile.
+
+    Parameters
+    ----------
+    emission_profile: `emission.angular_profile`
+    em_args: args for the emission profile
+    plot_kwargs:
+        - args for `matplotlib.pyplot.plot`
+        - ax: `matplotlib.pyplot.axes`. default = None
+        - angle_max: `float` - max angle for the plot. default = 2
+
+    Returns
+    -------
+    `matplot.pyplot.axes`
+    """
+
+    amax = plot_kwargs.pop('angle_max') if 'angle_max' in plot_kwargs else 2
+
+    angles = np.arange(100 * amax) / 100.
+    emission = emission_profile(angles, *em_args)
+
+    ax = plt.gca() if not 'ax' in plot_kwargs else plot_kwargs.pop('ax')
+
+    ax.plot(angles, emission, **plot_kwargs)
+
+    return ax
