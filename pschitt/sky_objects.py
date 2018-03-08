@@ -4,6 +4,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from . import geometry as geo
+from . import emission as em
 from math import pi
 from copy import copy
 
@@ -25,6 +26,8 @@ class shower:
         self.energy_primary = 0
         self.number_of_particles = 10
         self.particles = np.empty((3,self.number_of_particles))
+        self.particles_angular_emission_profile = em.angular_profile_constant
+        self.particles_angular_emission_profile_kwargs = {'c':1}
 
     def linear_segment(self, shower_first_interaction, shower_bot):
         """
@@ -134,8 +137,8 @@ class shower:
         self.particles = random_ellipsoide(shower_top_altitude, shower_length, shower_width, \
                                        self.alt, self.az, self.impact_point, self.number_of_particles)
 
-
-
+    def set_emission_profile(self, emission_profile, **kwargs):
+        self.emission_profile = emission_profile(**kwargs)
 
 
 

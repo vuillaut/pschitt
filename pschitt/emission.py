@@ -4,6 +4,8 @@ from . import geometry as geo
 import numpy as np
 
 
+
+
 def transmission(distances):
     """
     Compute the transmission coefficient between 0 and 1 taking into accounts all radiative transfer effects
@@ -35,20 +37,18 @@ def emission_profile(dist):
 
 
 
-def constant_profile(dist):
+def constant_profile(em=1):
     """
-    Given a distance to the impact point, give the probability to detect the shower
-    Dummy function where the probability is always one
+    Constant angular emission profile
 
     Parameters
     ----------
-    dist: float, distance to the impact point
+    em: float, constant being returned
 
     Returns
     -------
-    float between 0 and 1
     """
-    return 1
+    return em
 
 
 def power_law_profile(dist, alpha=2):
@@ -99,7 +99,23 @@ def ground_profile_1(dist, shift=120):
     return (dist<=shift) * 1. + (dist>shift) * 1./(dist - shift)
 
 
-def angular_profile_heaviside(angles, limit):
+def angular_profile_constant(angles, c=1):
+    """
+    Emission profile depending on the angle from particle axis.
+    Constant.
+    Parameters
+    ----------
+    angles: `numpy.ndarray`
+    c: float
+
+    Returns
+    -------
+    `numpy.ndarray`
+    """
+    return c * np.ones(len(angles))
+
+
+def angular_profile_heaviside(angles, limit=0.1):
     """
     Emission profile depending on the angle from particle axis.
     The emission profile is 1 below the limit angle and 0 above.
@@ -114,7 +130,7 @@ def angular_profile_heaviside(angles, limit):
     return 1 * (angles <= limit)
 
 
-def angular_profile_exp_falloff(angles, break_angle, alpha):
+def angular_profile_exp_falloff(angles, break_angle=0.1, alpha=2):
     """
     Profile equals to one until the break_angle then exponential decrease with coef -alpha
 
@@ -131,7 +147,28 @@ def angular_profile_exp_falloff(angles, break_angle, alpha):
     return 1 * (angles < break_angle) + np.exp(-alpha*(angles - break_angle)) * (angles >= break_angle)
 
 
-def mask_transmitted_particles(tel, shower, angular_profile, *args):
+def angular_profile_dummy_cherenkov(angles, max_angle=0.1, alpha=5):
+    """
+    Emission profile as a function of the angle from particle axis.
+    Dummy Cherenkov cone with exponential increase until `angles==max_angle` then exponential decrease
+
+    Parameters
+    ----------
+    angles: `numpy.ndarray`
+    max_angle: float
+
+    Returns
+    -------
+    `numpy.ndarray`
+    """
+    return (np.exp(alpha*angles) - 1)/(np.exp(alpha*max_angle)-1) \
+           * (angles < max_angle) \
+           + ((np.exp(alpha*(2*max_angle-angles)) - 1)/(np.exp(alpha*max_angle)-1)) \
+             * (angles >= max_angle) * (angles <= 2*max_angle)
+
+
+
+def mask_transmitted_particles(tel, shower, *args):
     """
     Compute a masking array for the photons from the shower to know if they reach the telescope
     depending on their transmission probability.
@@ -157,7 +194,8 @@ def mask_transmitted_particles(tel, shower, angular_profile, *args):
     angles = np.array([geo.angle(shower_direction, particle - tel.mirror_center) for particle in shower.particles])
 
     # The resulting transmission probability is the product of both:
-    p_trans = transmissions * angular_profile(angles, *args)
+    p_trans = transmissions * \
+              shower.particles_angular_emission_profile(angles, **shower.particles_angular_emission_profile_kwargs)
 
     mask_transmitted_particles = p_trans > np.random.rand(len(shower.particles))
 

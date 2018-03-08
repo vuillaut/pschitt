@@ -203,7 +203,7 @@ def threshold_pass(pix_signal, threshold):
         return False
 
 
-def shower_camera_image(shower, tel, noise = 0):
+def shower_camera_image(shower, tel, noise = 0, **kwargs):
     """
     Given a shower object and a telescope, compute the image of the shower in the camera
     Background noise can be added
@@ -217,17 +217,6 @@ def shower_camera_image(shower, tel, noise = 0):
     Numpy 1D array of the photon count in each pixel of the telescope camera
     """
 
-    # direction = geo.altaz_to_normal(shower.alt, shower.az)
-    # if shower_direction==None:
-    #     direction = np.array(shower.particles[shower.particles[:, 2].argmin()]
-    #                          - shower.particles[shower.particles[:, 2].argmax()])
-    # else:
-    #     direction = shower_direction
-    # direction = direction/np.sqrt((direction**2).sum())
-    # visible = geo.mask_visible_particles(tel, shower.particles, direction)
-    # visible = np.ones(len(shower), dtype=bool)
-    # shower_image = geo.image_shower_pfo(shower.particles[visible], tel)
-
     # Image the shower in the camera focale plane
     shower_image = geo.image_shower_pfo(shower.particles, tel)
 
@@ -239,7 +228,8 @@ def shower_camera_image(shower, tel, noise = 0):
     # Only part of the photons reach the telescope camera due to absorption
     break_angle = 0.018 # = 1 degree
     alpha = 0.75
-    mask = em.mask_transmitted_particles(tel, shower, em.angular_profile_exp_falloff, break_angle, alpha)
+    # mask = em.mask_transmitted_particles(tel, shower, em.angular_profile_exp_falloff, break_angle, alpha)
+    mask = em.mask_transmitted_particles(tel, shower)
     photons_in_camera = shower_cam[:, [0, 1]][mask]
 
     tel.signal_hist = shower_image_in_camera(tel, photons_in_camera, noise)
