@@ -21,7 +21,7 @@ Required packages:
 We recommend the use of [anaconda](https://www.anaconda.com)
 
 ```
-conda create --name pschitt python=3 matplotlib bumpy scipy numba
+conda create --name pschitt python=3 matplotlib numpy scipy numba
 source activate pschitt
 ```
 
