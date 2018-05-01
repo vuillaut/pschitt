@@ -9,16 +9,30 @@ It is intended to model atmospheric showers and image them with Imaging Atmosphe
 
 -----
 
-Install:
+### Install:
 
-python setup.py develop
-
-install requires:
+Required packages:
 - astropy  
 - numpy  
 - scipy>=0.19    
 - matplotlib>=2.0  
 - numba  
+
+We recommend the use of [anaconda](https://www.anaconda.com)
+
+```
+conda create --name pschitt python=3 matplotlib numpy scipy numba
+source activate pschitt
+```
+
+In the pschitt directory:   
+
+```
+python setup.py install
+```
+
+
+  
 
 -----
 
