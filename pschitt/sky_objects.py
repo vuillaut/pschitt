@@ -1,14 +1,52 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 
-
+from __future__ import division
 import numpy as np
 import matplotlib.pyplot as plt
 from . import geometry as geo
 from . import emission as em
+import math
 from math import pi
 from copy import copy
 
+# MODIFICATION 17/4/18 #
 
+"""
+Constants
+----------
+Ec_eV: Electron critical energy [eV]
+Ec_J: Electron critical energy [J]
+Xo: Radiation length of air [g/cm^2]
+H: Scale height of the atmosphere [m]
+g: Acceleration due to gravity at sea level [m/s^2]
+Po: Atmospheric pressure at sea level [Pa]
+alpha: Electromagnetic coupling constant [none]
+c: Speed of light in a vacuum [m/s]
+m_e: Mass of an electron [kg]
+Es_J: ??? [J] 
+po = Density of air at sea level [kg/m^3]
+po_g = Density of air at sea level [g/cm^3]
+Rm_0 = Moliere radius at sea level [m]
+binfactor = Scaling factor for sky bins [none]
+binsize = Size of sky bins [g/cm^2]
+"""
+Ec_eV = 8.6e7 
+Ec_J = 8.6e7*(1.602e-19) 
+Xo = 37.2 
+H = 7250 # !Needs refining!
+g = 9.81 # !Needs refining!
+Po = 101325 # !Needs refining!
+alpha = 137**(-1)
+c = 2.99792458e8
+m_e = 9.11e-31 
+Es_J = m_e*(c**2)*(math.sqrt(4*math.pi*alpha))
+po = 1.225 # !Needs refining! 
+po_g = po/1000
+Rm_0 = 54.6575699745 
+binfactor = (1+(9/7))/2
+binsize = binfactor*Xo
+
+# END OF MODIFICATION 17/4/18 #
 
 class shower:
     """
@@ -24,6 +62,7 @@ class shower:
         self.az = 0
         self.impact_point = [0,0,0]
         self.energy_primary = 0
+        self.height_of_first_interaction = 0 # Added 18/4/18
         self.number_of_particles = 10
         self.particles = np.empty((3,self.number_of_particles))
         self.particles_angular_emission_profile = em.angular_profile_constant
@@ -98,6 +137,67 @@ class shower:
         self.particles = gaussian_ellipsoide(shower_top_altitude, shower_length, shower_width, \
                                          self.alt, self.az, self.impact_point, self.number_of_particles)
 
+# MODIFICATION 17,21/4/18 #
+
+    def ShowerMax_depth(self):
+        """
+        Parameters
+        ----------
+        self.energy_primary
+        """
+        self.depth_shower_max = ShowerMax_depth(self.energy_primary)
+        return self.depth_shower_max
+        
+    def showermax(self):
+        """
+        Parameters
+        ----------
+        self.energy_primary
+        """
+        self.height_shower_max = showermax(self.energy_primary)
+        return self.height_shower_max
+
+    def moliere_radius_ShMax(self):
+        """
+        Parameters
+        ----------
+        self.energy_primary
+        """
+        self.RMol_ShMax = moliere_radius_ShMax(self.energy_primary)
+        return self.RMol_ShMax
+
+    def particles_in_bins(self):  #21/4/18
+        """
+        Parameters
+        ----------
+        self.height_of_first_interaction
+        self.energy_primary
+        """
+        self.number_in_bins = particles_in_bins(self.height_of_first_interaction, self.energy_primary)
+        return self.number_in_bins
+
+# END OF MODIFICATION 17,21/4/18 #
+
+# MODIFICATION 16,18,19/4/18 #
+
+    def scaled_ellipsoide_alongz(self):
+        """
+        Parameters
+        ----------
+        shower_centre
+        RMol_ShMax
+        """
+        self.particles = scaled_ellipsoide_alongz(self.energy_primary, self.height_of_first_interaction)
+
+    def scaled_ellipsoide(self):
+        """
+        Parameters
+        ----------
+        ShMax
+        """
+        self.particles = scaled_ellipsoide(self.energy_primary, self.height_of_first_interaction, self.alt, self.az, self.impact_point)
+
+# END OF MODIFICATION 16,18,19/4/18 #
 
     def shower_rot(self, alt, az):
         """
@@ -139,7 +239,6 @@ class shower:
 
     def set_emission_profile(self, emission_profile, **kwargs):
         self.emission_profile = emission_profile(**kwargs)
-
 
 
 
@@ -271,6 +370,159 @@ def gaussian_ellipsoide(shower_top_altitude, shower_length, shower_width, alt, a
     shower = gaussian_ellipsoide_alongz(shower_center, shower_length, shower_width, n)
     return shower_array_rot(shower, alt, az) + np.array(impact_point)
 
+# MODIFICATION 17,21/4/18 #
+
+def ShowerMax_depth(E):	
+    """
+    Calculates the atmospheric depth at which the shower maximum occurs given the primary photon energy.
+
+    Parameters
+    ----------
+    E: energy of the primary photon [eV] - int
+    Ec_J: Electron critical energy [J] - float
+    binsize: Size of sky bins [g/cm^2] - float
+
+    Returns
+    ----------
+    depthmax: depth of maximum [g/cm^2] - float
+    """
+    Einp_J = E*1.602e-19 # Convert input energy into joules 
+    depthmax = ((math.log(Einp_J/Ec_J))*binsize)/(math.log(2)) # Changed Xo to binsize 25/4/18
+    return depthmax
+
+def showermax(E):
+    """
+    Calculates height of shower maximum above sea level.
+    
+    Parameters
+    ----------
+    E: energy of the primary photon [eV] - float
+    H: scale height of the atmosphere [m] - int
+    g: Acceleration due to gravity at sea level [m/s^2] - float
+    Po: Air pressure at sea level [Pa] - int
+
+    Returns
+    ----------
+    ShMax: height of shower maximum [m asl] - float
+    """
+    ShMax = (-H*math.log((ShowerMax_depth(E)*10*g)/(Po)))
+    return ShMax
+
+def moliere_radius_ShMax(E):
+    """
+    Calculates the moliere radius at height of shower maximum.
+    
+    Parameters
+    ----------
+    E: Energy of the primary photon [eV] - int
+    po_g: Density of air at sea level [g/cm^3] - float 
+    H: Scale height of the atmosphere [m] - int
+    Xo: Radiation length of air [g/cm^2] - float
+    Es_J: ??? [J] - float
+    Ec_J: Electron critical energy [J] - float
+    
+    Returns
+    ----------
+    R_m: Moliere radius at height of maximum [m]
+    """
+    p = (po_g*math.exp(-showermax(E)/H))
+    R_m = (Xo*Es_J)/(p*Ec_J)
+    return R_m
+
+def particles_in_bins(h_init, E):
+    """
+    Slices shower into bins of size 'binsize' and calculates number of electrons and photons in each bin.
+    
+    Parameters
+    ----------
+    h_init: Height of first photon interaction [m] - float
+    depth_shower_max: Atmospheric depth of shower maximum [g/cm^2] - float
+    
+    Returns
+    ----------
+    num: Numpy array of electron number and photon number in each bin [none] - floats
+    N_tot: The total number of particles in the shower to be simulated - int
+    """
+    depth_first_interaction = ((Po*math.exp(-h_init/H))/g)/10
+    n = int(math.ceil((ShowerMax_depth(E)-depth_first_interaction)/binsize))
+    print('Number of sky bins: ', n)
+    def propagate():
+        ne = [0]
+        nph =[1]
+        counter = 0
+        while True:
+            ne.append(ne[-1]+(2*nph[-1]))
+            nph.append(ne[-2])
+            counter += 1
+            yield [ne[:], nph[:]]
+    prop = propagate()
+
+    for i, particles in enumerate(prop):
+        if (i+1)==n: 
+            #print i, particles
+            num = np.array(particles).T
+            break
+    N_tot = int(sum(i for [i,j] in num))
+    print('Particles in n bins: ', num)
+    print('Total number of electrons: ', N_tot) 
+    return num, N_tot
+
+# END OF MODIFICATION 17,21/4/18 #
+
+# MODIFICATION 16,18,19,23/4/18 #
+
+def scaled_ellipsoide_alongz(E, h_init): # Name change 19/4/18
+    """
+    Lateral distribution of particles described by a gaussian distribution where 90% lie within one moliere 	   radius at sea level.
+    Longitudinal distribution described by a laplacian distribution distribution folded about shower maximum and scaled to the difference between the height of first interaction and shower maximum. 
+
+    Parameters
+    ----------
+    E: Energy of Primary Photon [eV] - float
+    h_init: Height of first interaction [m] - float
+    n: Number of particles in shower [none] - int
+
+    Returns
+    -------
+    Numpy array (3,n) - positions of particles in shower
+    """
+    # old scale for x and y: scale=((2*RMol_ShMax)/1.64485362692)
+    ShMax = showermax(E) # Added 18/4/18
+    shower_center = [0, 0, ShMax] # Added 18/4/18
+    RMol_ShMax = moliere_radius_ShMax(E) # Added 17/4/18
+    n = particles_in_bins(h_init,E)[1] # Added 23/4/18
+    x = np.random.normal(loc=shower_center[0], scale=((2*Rm_0)/1.64485362692), size=n) # Changed 19/4/18
+    y = np.random.normal(loc=shower_center[1], scale=((2*Rm_0)/1.64485362692), size=n) # Changed 19/4/18
+    z1 = np.random.laplace(loc=shower_center[2], scale=((h_init-ShMax)/4), size=n) # Changed 19/4/18
+    z=[]   
+    for i in z1:
+        if i-ShMax >=0:
+                z.append(i)
+        else: 
+                z.append(i+(2*abs(i-ShMax))) # Added 19/4/18
+    return np.array([x, y, z]).T
+
+def scaled_ellipsoide(E, h_init, alt, az, impact_point): # Name change 19/4/18
+    """
+    n random points following gaussian lateral and laplacian longitudinal distributions. Ellipsoid originates 	    from direction (alt, az) and goes through impact point.  
+
+    Parameters
+    ----------	
+    E: Energy of Primary Photon [eV] - float
+    h_init: Height of first interaction [m] - float
+    alt: altitude angle of shower [deg] - float
+    az: azimuthal angle of shower [deg] - float 
+    impact_point: point where shower axis intersects the ground [none] - np.array
+    n: number of particles in shower [none] - int
+
+    Returns
+    -------
+    List of points in the shower (3-floats arrays)
+    """
+    shower = scaled_ellipsoide_alongz(E, h_init) 
+    return shower_array_rot(shower, alt, az) + np.array(impact_point)
+
+# END MODIFICATION 16,18,19,23/4/18#
 
 def shifted_ellipsoide_v1(shower_center, shower_length, shower_width, n, p, origin_altitude):
     """
@@ -373,4 +625,16 @@ def random_ellipsoide(shower_top_altitude, shower_length, shower_width, alt, az,
     shower = random_ellipsoide_alongz(shower_center, shower_length, shower_width, n)
     return shower_array_rot(shower, alt, az) + np.array(impact_point)
 
+"""
+## THE FOLLOWING IS FOR TEST PURPOSES ONLY 18,19/4/18 ##
+
+shower = shower()
+shower.energy_primary = 5e10
+#shower.number_of_particles = int(1e4)
+shower.height_of_first_interaction = 25000
+shower.scaled_ellipsoide()
+shower.particles_in_bins()
+Q = shower.particles
+print(Q)
+"""
 
