@@ -7,6 +7,7 @@ from . import geometry as geo
 from . import emission as em
 from math import pi
 from copy import copy
+from astropy import units as u
 
 
 
@@ -19,11 +20,11 @@ class shower:
         Init
         """
         self.type = "Shower"
-        self.altitude_first_interaction = 0
+        self.altitude_first_interaction = 0 * u.m
         self.alt = np.deg2rad(70)
         self.az = 0
-        self.impact_point = [0,0,0]
-        self.energy_primary = 0
+        self.impact_point = [0,0,0] * u.m
+        self.energy_primary = 0 * u.eV
         self.number_of_particles = 10
         self.particles = np.empty((3,self.number_of_particles))
         self.particles_angular_emission_profile = em.angular_profile_constant
