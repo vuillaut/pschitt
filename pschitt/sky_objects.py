@@ -20,13 +20,13 @@ class shower:
         Init
         """
         self.type = "Shower"
-        self.altitude_first_interaction = 0 * u.m
+        self.altitude_first_interaction = 0
         self.alt = np.deg2rad(70)
         self.az = 0
-        self.impact_point = [0,0,0] * u.m
-        self.energy_primary = 0 * u.eV
+        self.impact_point = [0,0,0]
+        self.energy_primary = 0
         self.number_of_particles = 10
-        self.particles = np.empty((3,self.number_of_particles))
+        self.particles = np.zeros((self.number_of_particles, 3))
         self.particles_angular_emission_profile = em.angular_profile_constant
         self.particles_angular_emission_profile_kwargs = {'c':1}
 

@@ -46,7 +46,7 @@ def find_closest_pixel(pos, pixel_tab):
 
 
 @jit
-def photons_to_signal(photon_pos_tab, pixel_tab, pixel_size):
+def photons_to_signal(photon_pos_tab, pixel_tab, pixel_radius):
     """
     Count the number of photons in each pixel of the pixel_tab (camera)
 
@@ -54,13 +54,14 @@ def photons_to_signal(photon_pos_tab, pixel_tab, pixel_size):
     ----------
     photon_pos_tab: Numpy 2D array shape (N,2) with the position of the photons in the camera frame
     pixel_tab: Numpy 2D array with the positions of the pixels in the camera frame
+    pixel_radius: float, maximal radius of one pixel to consider that a photon can be counted
 
     Returns
     -------
     Numpy 1D array with the signal in each pixel
     """
     count = np.zeros(len(pixel_tab))
-    d_max2 = (pixel_size/2.)**2
+    d_max2 = (pixel_radius)**2
     for photon in photon_pos_tab:
         D2 = np.sum((pixel_tab - photon)**2, axis=1)
         if D2.min() < d_max2:
@@ -79,7 +80,7 @@ def photons_to_signal(photon_pos_tab, pixel_tab, pixel_size):
 #     return (-1 * distances[argmin] > dist_max2) + argmin * (distances[argmin] <= dist_max2)
 #
 #
-# def photons_to_signal_2(photon_pos_tab, pixel_tab, pixel_size):
+# def photons_to_signal_2(photon_pos_tab, pixel_tab, pixel_radius):
 #     """
 #     alternative to photons_to_signal with smart coding.
 #     performances are similar to photons_to_signal when @jit is used
@@ -92,7 +93,7 @@ def photons_to_signal(photon_pos_tab, pixel_tab, pixel_size):
 #     -------
 #     Numpy 1D array with the signal in each pixel
 #     """
-#     d_max2 = (pixel_size / 2.) ** 2
+#     d_max2 = (pixel_radius) ** 2
 #     pixel_id = np.array([pixel_in_camera(np.sum((p-pixel_tab)**2, axis=1), d_max2) for p in photon_pos_tab])
 #     return np.bincount(pixel_id[pixel_id >= 0], minlength=len(pixel_tab))
 
@@ -176,7 +177,7 @@ def shower_image_in_camera(telescope, photon_pos_tab, lam=0, result_filename=Non
     -------
     Numpy 1D array with the photon count in each pixel
     """
-    pixels_signal = photons_to_signal(photon_pos_tab, telescope.pixel_tab, telescope.pixel_size)
+    pixels_signal = photons_to_signal(photon_pos_tab, telescope.pixel_tab, telescope.pixel_radius)
 
     pixels_signal = add_noise_gaussian(pixels_signal, lam)
     if result_filename:

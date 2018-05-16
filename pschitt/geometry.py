@@ -124,7 +124,7 @@ class Telescope:
             self.camera_type = 'default'
             self.set_default_cam()
 
-        self.pixel_size = get_pixel_size(self.pixel_tab)
+        self.pixel_radius = get_pixel_radius(self.pixel_tab)
 
 
     def display_info(self):
@@ -147,11 +147,11 @@ class Telescope:
         self.normal = self.normal / np.sqrt((self.normal ** 2).sum())
 
 
-def get_pixel_size(pixel_tab):
+def get_pixel_radius(pixel_tab):
     """
-    Compute the size of a pixel from the array of pixels positions assuming that all pixels have the same size
-    and that the grid is regular and without holes between pixels
-    The pixel size corresponds to its longest length between two edges points
+    Compute the minimal distance between two pixels from the array of pixels positions.
+    The underlying assumption is that all pixels have the same size and shape
+    The pixel radius corresponds to its longest length between two edges points
     Parameters
     ----------
     pixel_tab: numpy array (N,2)
