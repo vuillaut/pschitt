@@ -40,3 +40,9 @@ def test_image_shower_pfo():
     assert (geo.image_shower_pfo(shower, tel) == np.array([[15, 0, 10], [10, 0, 10]], dtype=float)).all()
 
 
+def test_telescope_display_info():
+    """
+    Test the display info function in the Telescope class.
+    """
+    tel = geo.Telescope([0, 0, 0], [0, 0, 1])
+    tel.display_info()

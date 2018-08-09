@@ -120,7 +120,8 @@ class Telescope:
             self.set_pixel_pos_from_file(ds.get('PosPixel_0.txt'))
 
         else:
-            print("The camera type {0} is not recognised. A square camera will be set by default.".format(self.camera_type))
+            print("The camera type {0} is not recognised. A square camera will be set by default."
+                  .format(self.camera_type))
             self.camera_type = 'default'
             self.set_default_cam()
 
@@ -130,13 +131,18 @@ class Telescope:
     def display_info(self):
         """Just display some info about telescope and camera"""
         print('')
-        print("Telescope number ", self.id)
-        print("Type ", self.type)
-        print("Camera type: ", self.camera_type)
-        print("Mirror Center: ", self.mirror_center)
-        print("normal ", self.normal)
-        print("focal ", self.focal)
-        print("Pixel position datafile ", self.pixpos_filename)
+        print("Telescope number: {:d}".format(self.id))
+        print("Camera type: {}".format(self.camera_type))
+        print("Mirror center position: {}"
+              .format(np.array2string(self.mirror_center, precision=3, suppress_small=True)))
+        print("Camera center position: {}"
+              .format(np.array2string(self.camera_center, precision=3, suppress_small=True)))
+        print("Pointing vector: {}"
+              .format(np.array2string(self.normal, precision=3, suppress_small=True)))
+        print("Focal value: {:.2f}".format(self.focal))
+        print("Pixel radius {:.2f}".format(self.pixel_radius))
+        print("Camera size: {:.2f}".format(self.camera_size))
+
 
 
     def pointing_object(self, point):
