@@ -9,9 +9,8 @@ import numpy as np
 from . import geometry as geo
 from . import emission as em
 from numba import jit
-from . import emission as emi
-from multiprocessing import Pool
-from functools import partial
+# from multiprocessing import Pool
+# from functools import partial
 
 
 def read_pixel_pos(filename):

@@ -2,7 +2,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # import sys
 import os
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 
@@ -31,7 +31,7 @@ setup(name='pschitt',
           # 'matplotlib>=2.0',
           # 'numba'
       ],
-      packages=['pschitt'],
+      packages=find_packages(),
       tests_require=['pytest'],
       author='Thomas Vuillaume',
       author_email='thomas.vuillaume@lapp.in2p3.fr',
