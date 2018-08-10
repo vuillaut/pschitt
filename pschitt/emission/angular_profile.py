@@ -76,7 +76,7 @@ def lgdt06(angle, eta=0.001):
     if type(angle) == np.ndarray:
         assert (angle < np.pi).all()
         y = K * np.ones(len(angle))
-        y[angle > eta] = K * eta / angle[angle>eta] * np.exp(- (angle[angle>eta] - eta) / (4 * eta))
+        y[angle > eta] = K * eta / angle[angle > eta] * np.exp(- (angle[angle > eta] - eta) / (4 * eta))
         return y
 
     else:
