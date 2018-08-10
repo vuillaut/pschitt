@@ -2,6 +2,9 @@ import pschitt.emission as em
 import numpy as np
 
 
+def test_verify_normalisation():
+    assert em.angular_profile.verify_normalisation(lambda x: 1./np.pi**3)
+
 def test_angular_profile_exp_peak():
     assert em.angular_profile.verify_normalisation(em.angular_profile.exp_peak)
 
