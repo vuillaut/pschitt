@@ -5,9 +5,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from . import geometry as geo
 from . import emission as em
+from .emission import angular_profile
 from math import pi
 from copy import copy
-from astropy import units as u
 
 
 
@@ -27,8 +27,8 @@ class shower:
         self.energy_primary = 0
         self.number_of_particles = 10
         self.particles = np.zeros((self.number_of_particles, 3))
-        self.particles_angular_emission_profile = em.angular_profile_constant
-        self.particles_angular_emission_profile_kwargs = {'c':1}
+        self.particles_angular_emission_profile = em.angular_profile.constant
+        self.particles_angular_emission_profile_kwargs = {}
 
     def linear_segment(self, shower_first_interaction, shower_bot):
         """

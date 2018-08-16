@@ -11,9 +11,14 @@ from . import dataset as ds
 
 DEF = -10000
 
+
+# Lengths are in meters
 LST_FOCAL = 16
 MST_FOCAL = 10
 SST_FOCAL = 5
+LST_MIRROR_DIAMETER = 23
+MST_MIRROR_DIAMETER = 12
+SST_MIRROR_DIAMETER = 4
 
 pschitt_dir = os.path.split(__file__)[0].rsplit('/', maxsplit=1)[0] + '/'
 
@@ -64,12 +69,16 @@ class Telescope:
 
     def set_default_cam(self):
         """
-        set default square camera. 50x50 = 2500 pixels. 1m side length. 10m focal
+        set default square camera. 50x50 = 2500 pixels.
+        1m side length.
+        10m focal
+        mirror diameter = 12m
         """
         self.camera_type = 'default'
         X, Y = np.mgrid[-1:1:50j, -1:1:50j]
         self.pixel_tab = (np.vstack([X.ravel(), Y.ravel()])).T
         self.focal = 10
+        self.mirror_diameter = 12
 
     def set_camera(self, camera_type):
         """
@@ -87,36 +96,43 @@ class Telescope:
         elif self.camera_type in ['astri', '4']:
             self.type = "sst"
             self.focal = SST_FOCAL
+            self.mirror_diameter = SST_MIRROR_DIAMETER
             self.set_pixel_pos_from_file(ds.get('PosPixel_4.txt'))
 
         elif self.camera_type in ['gct', '6']:
             self.type="sst"
             self.focal = SST_FOCAL
+            self.mirror_diameter = SST_MIRROR_DIAMETER
             self.set_pixel_pos_from_file(ds.get('PosPixel_6.txt'))
 
         elif self.camera_type in ['dc', '5']:
             self.type="sst"
             self.focal = SST_FOCAL
+            self.mirror_diameter = SST_MIRROR_DIAMETER
             self.set_pixel_pos_from_file(ds.get('PosPixel_5.txt'))
 
         elif self.camera_type in ['sct', '3']:
             self.type="mst"
             self.focal = MST_FOCAL
+            self.mirror_diameter = MST_MIRROR_DIAMETER
             self.set_pixel_pos_from_file(ds.get('PosPixel_3.txt'))
 
         elif self.camera_type in ['nectar', '1']:
             self.type="mst"
             self.focal = MST_FOCAL
+            self.mirror_diameter = MST_MIRROR_DIAMETER
             self.set_pixel_pos_from_file(ds.get('PosPixel_1.txt'))
 
         elif self.camera_type in ['flash', '2']:
             self.type="mst"
             self.focal = MST_FOCAL
+            self.mirror_diameter = MST_MIRROR_DIAMETER
             self.set_pixel_pos_from_file(ds.get('PosPixel_2.txt'))
 
         elif self.camera_type in ['lst_cam', '0']:
             self.type="lst"
             self.focal = LST_FOCAL
+            self.mirror_diameter = LST_MIRROR_DIAMETER
             self.set_pixel_pos_from_file(ds.get('PosPixel_0.txt'))
 
         else:
@@ -144,13 +160,13 @@ class Telescope:
         print("Camera size: {:.2f}".format(self.camera_size))
 
 
-
     def pointing_object(self, point):
         """
         set the pointing direction to a point in space
         """
         self.normal = np.array(point) - self.camera_center
         self.normal = self.normal / np.sqrt((self.normal ** 2).sum())
+
 
 
 def get_pixel_radius(pixel_tab):
