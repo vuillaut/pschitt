@@ -209,9 +209,9 @@ def plot_angular_emission_profile(emission_profile, *em_args, **plot_kwargs):
     `matplot.pyplot.axes`
     """
 
-    amax = plot_kwargs.pop('angle_max') if 'angle_max' in plot_kwargs else 2
+    amax = plot_kwargs.pop('angle_max') if 'angle_max' in plot_kwargs else np.pi
 
-    angles = np.arange(100 * amax) / 100.
+    angles = np.linspace(0, amax, 100)
     emission = emission_profile(angles, *em_args)
 
     ax = plt.gca() if not 'ax' in plot_kwargs else plot_kwargs.pop('ax')

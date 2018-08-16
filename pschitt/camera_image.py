@@ -225,10 +225,7 @@ def shower_camera_image(shower, tel, noise = 0, **kwargs):
 
     # impact_distance = np.sqrt(np.sum((shower.impact_point - tel.mirror_center)**2))
 
-    # Only part of the photons reach the telescope camera due to absorption
-    break_angle = 0.018 # = 1 degree
-    alpha = 0.75
-    # mask = em.mask_transmitted_particles(tel, shower, em.angular_profile_exp_falloff, break_angle, alpha)
+    # Only part of the photons reach the telescope camera due to absorption and emission angular profile
     mask = em.mask_transmitted_particles(tel, shower)
     photons_in_camera = shower_cam[:, [0, 1]][mask]
 
