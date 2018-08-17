@@ -25,11 +25,10 @@ setup(name='pschitt',
       # don't need to list the sub-dependencies like numpy, since
       # astropy already depends on it)
       install_requires=[
-          # 'astropy',
-          # 'numpy',
-          # 'scipy>=0.19',
-          # 'matplotlib>=2.0',
-          # 'numba'
+          'numpy',
+          'scipy',
+          'matplotlib>=2.0',
+          'numba'
       ],
       packages=find_packages(),
       tests_require=['pytest'],
