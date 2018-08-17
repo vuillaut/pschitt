@@ -30,11 +30,3 @@ def test_shower_camera_image():
     tel = geo.Telescope([10, 0, 0], [-1./3., 0, 2./3.])
     tel.pixel_tab = np.array([[0,0],[0,1],[1,0],[-1,1]])
     assert (ci.shower_camera_image(shower, tel) == np.array([3, 0, 0, 0])).all()
-
-
-def test_photons_to_signal():
-    photon_pos_tab = np.array([[0, 0], [0, 0.5], [0.4, 2], [-1, -1]])
-    pixel_tab = np.array([[0, 0], [0, 1.001], [0, 2]])
-    pixel_radius = 1
-    assert (ci.photons_to_signal(photon_pos_tab, pixel_tab, pixel_radius) == \
-    np.array([ 2,  0,  1])).all()
