@@ -7,10 +7,15 @@ _pschitt!_ is a software to image an object in the sky by an array of ground tel
 It is intended to model atmospheric showers and image them with Imaging Atmospheric Cherenkov Telescopes.
 "_pschitt_" is a common French onomatopoeia for the sound produced when a rapid production of gas flows, for example when opening a bottle containing carbonated water.
 
+
 -----
 
+[![Build Status](https://travis-ci.com/vuillaut/pschitt.svg?branch=master)](https://travis-ci.com/vuillaut/pschitt)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/a2d0cf8f734642e187b39d3028203e23)](https://www.codacy.com/project/vuillaut/pschitt/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=vuillaut/pschitt&amp;utm_campaign=Badge_Grade_Dashboard)
+[![Codacy Badge](https://api.codacy.com/project/badge/Coverage/a2d0cf8f734642e187b39d3028203e23)](https://www.codacy.com/app/vuillaut/pschitt?utm_source=github.com&utm_medium=referral&utm_content=vuillaut/pschitt&utm_campaign=Badge_Coverage)
 
-- [![Build Status](https://travis-ci.com/vuillaut/pschitt.svg?branch=master)](https://travis-ci.com/vuillaut/pschitt)
+
+
 - Code : https://github.com/vuillaut/pschitt
 - Author contact: Thomas Vuillaume - thomas.vuillaume@lapp.in2p3.fr
 - License: BSD-3
