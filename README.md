@@ -5,7 +5,7 @@
 
 _pschitt!_ is a software to image an object in the sky by an array of ground telescopes.
 It is intended to model atmospheric showers and image them with Imaging Atmospheric Cherenkov Telescopes.
-_pschitt_ is a common French onomatopoeia for the sound produced when a rapid production of gas flows, for example when opening a bottle containing carbonated water.
+"_pschitt_" is a common French onomatopoeia for the sound produced when a rapid production of gas flows, for example when opening a bottle containing carbonated water.
 
 -----
 
