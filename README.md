@@ -4,36 +4,36 @@ It is intended to model atmospheric showers and image them with Imaging Atmosphe
 
 -----
 
-- [](https://travis-ci.com/vuillaut/pschitt.svg?branch=master)
+
+- [![Build Status](https://travis-ci.com/vuillaut/pschitt.svg?branch=master)](https://travis-ci.com/vuillaut/pschitt)
 - Code : https://github.com/vuillaut/pschitt
 - Author contact: Thomas Vuillaume - thomas.vuillaume@lapp.in2p3.fr
 - License: BSD-3
 
 -----
 
-### Install:
+## Install:
 
-Required packages:
-- astropy  
+Required packages: 
 - numpy  
 - scipy>=0.19    
 - matplotlib>=2.0  
 - numba  
 
-We recommend the use of [anaconda](https://www.anaconda.com)
+### Install using [anaconda](https://www.anaconda.com)
+
 
 ```
-conda create --name pschitt python=3 matplotlib numpy scipy numba
+conda create --name pschitt python=3 --file requirements.txt
 source activate pschitt
-```
-
-In the pschitt directory:   
-
-```
 python setup.py install
 ```
 
+### Install using pip
 
+```
+pip install -r requirements.txt .
+```
 
 
 -----
