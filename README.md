@@ -1,6 +1,11 @@
-# _pschitt!_
+![pschitt logo](https://github.com/vuillaut/pschitt/wiki/images/logo_150x180.png)
+
+
+# _pschitt!_ - A Python package for the modelling of atmoSpheric Showers and CHerenkov Imaging Terrestrial Telescopes
+
 _pschitt!_ is a software to image an object in the sky by an array of ground telescopes.
-It is intended to model atmospheric showers and image them with Imaging Atmospheric Cherenkov Telescopes
+It is intended to model atmospheric showers and image them with Imaging Atmospheric Cherenkov Telescopes.
+_pschitt_ is a common French onomatopoeia for the sound produced when a rapid production of gas flows, for example when opening a bottle containing carbonated water.
 
 -----
 
