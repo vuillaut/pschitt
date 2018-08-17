@@ -46,3 +46,11 @@ def test_telescope_display_info():
     """
     tel = geo.Telescope([0, 0, 0], [0, 0, 1])
     tel.display_info()
+
+
+def test_is_particle_visible():
+    particle_position = np.array([10, 0, 20])
+    telescope = geo.Telescope([0, 0, 0], [1, 0, 2])
+    particle_direction = np.array([-1, 0, -2])
+    particle_energy = 1
+    assert geo.is_particle_visible(particle_position, particle_direction, particle_energy, telescope)

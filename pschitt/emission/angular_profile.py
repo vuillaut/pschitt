@@ -17,7 +17,7 @@ def constant(angle):
     """
     # K = 1. / np.pi ** 3
     K = 1
-    if type(angle) == np.ndarray:
+    if isinstance(angle, np.ndarray):
         assert (angle <= np.pi).all()
         return K * np.ones(len(angle))
     else:
@@ -44,7 +44,7 @@ def heaviside(angle, limit=0.1):
     assert limit > 0
     # K = 1. / (np.pi * min(np.pi, limit) ** 2)
     K = 1.
-    if type(angle) == np.ndarray:
+    if isinstance(angle, np.ndarray):
         assert (angle <= np.pi).all()
         return K * (angle <= limit)
     else:
@@ -80,7 +80,7 @@ def lgdt06(angle, eta=0.001):
 
     K = 1.
 
-    if type(angle) == np.ndarray:
+    if isinstance(angle, np.ndarray):
         assert (angle <= np.pi).all()
         y = K * np.ones(len(angle))
         y[angle > eta] = K * eta / angle[angle > eta] * np.exp(- (angle[angle > eta] - eta) / (4 * eta))
@@ -140,7 +140,7 @@ def exp_peak(angle, eta=0.1, alpha=1):
 
     K = 1/(np.exp(alpha*eta)-1)  # verify max emission (at angle=eta) = 1
 
-    if type(angle) == np.ndarray:
+    if isinstance(type(angle), np.ndarray):
         assert (angle <= np.pi).all()
         return K  * (np.exp(alpha * angle) - 1) * (angle < eta) \
                + K * (np.exp(alpha * (2 * eta - angle)) - 1) * (angle >= eta) * (angle <= 2 * eta)

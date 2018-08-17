@@ -899,13 +899,13 @@ def telescopes_unicity(tel_list):
     -------
     Boolean: True if all telescopes in the list are unique
     """
-    bool = True
+    are_unique = True
     for tel1 in tel_list:
         for tel2 in tel_list:
             if ((tel1.mirror_center == tel2.mirror_center).all() and tel1.id != tel2.id):
                 print("Telescopes {0} and {1} are both at the same position {3}".format(tel1.id, tel2.id, tel1.mirror_center))
-                bool = False
-    return bool
+                are_unique = False
+    return are_unique
 
 
 def particle_cone_angle(particle_position, particle_beta=1, air_index=1):
