@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from . import geometry as geo
 from . import emission as em
 import math
+from .emission import angular_profile
 from math import pi
 from copy import copy
 #from sampling import z1 # Added 01/8/18
@@ -75,9 +76,9 @@ class shower:
         self.scale = 100 # Added 30/07/18
         self.height_of_first_interaction = 0 # Added 18/4/18
         self.number_of_particles = 10
-        self.particles = np.empty((3,self.number_of_particles))
-        self.particles_angular_emission_profile = em.angular_profile_constant
-        self.particles_angular_emission_profile_kwargs = {'c':1}
+        self.particles = np.zeros((self.number_of_particles, 3))
+        self.particles_angular_emission_profile = em.angular_profile.constant
+        self.particles_angular_emission_profile_kwargs = {}
 
     def linear_segment(self, shower_first_interaction, shower_bot):
         """

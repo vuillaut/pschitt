@@ -11,9 +11,14 @@ from . import dataset as ds
 
 DEF = -10000
 
+
+# Lengths are in meters
 LST_FOCAL = 16
 MST_FOCAL = 10
 SST_FOCAL = 5
+LST_MIRROR_DIAMETER = 23
+MST_MIRROR_DIAMETER = 12
+SST_MIRROR_DIAMETER = 4
 
 pschitt_dir = os.path.split(__file__)[0].rsplit('/', maxsplit=1)[0] + '/'
 
@@ -64,12 +69,16 @@ class Telescope:
 
     def set_default_cam(self):
         """
-        set default square camera. 50x50 = 2500 pixels. 1m side length. 10m focal
+        set default square camera. 50x50 = 2500 pixels.
+        1m side length.
+        10m focal
+        mirror diameter = 12m
         """
         self.camera_type = 'default'
         X, Y = np.mgrid[-1:1:50j, -1:1:50j]
         self.pixel_tab = (np.vstack([X.ravel(), Y.ravel()])).T
         self.focal = 10
+        self.mirror_diameter = 12
 
     def set_camera(self, camera_type):
         """
@@ -87,56 +96,68 @@ class Telescope:
         elif self.camera_type in ['astri', '4']:
             self.type = "sst"
             self.focal = SST_FOCAL
+            self.mirror_diameter = SST_MIRROR_DIAMETER
             self.set_pixel_pos_from_file(ds.get('PosPixel_4.txt'))
 
         elif self.camera_type in ['gct', '6']:
             self.type="sst"
             self.focal = SST_FOCAL
+            self.mirror_diameter = SST_MIRROR_DIAMETER
             self.set_pixel_pos_from_file(ds.get('PosPixel_6.txt'))
 
         elif self.camera_type in ['dc', '5']:
             self.type="sst"
             self.focal = SST_FOCAL
+            self.mirror_diameter = SST_MIRROR_DIAMETER
             self.set_pixel_pos_from_file(ds.get('PosPixel_5.txt'))
 
         elif self.camera_type in ['sct', '3']:
             self.type="mst"
             self.focal = MST_FOCAL
+            self.mirror_diameter = MST_MIRROR_DIAMETER
             self.set_pixel_pos_from_file(ds.get('PosPixel_3.txt'))
 
         elif self.camera_type in ['nectar', '1']:
             self.type="mst"
             self.focal = MST_FOCAL
+            self.mirror_diameter = MST_MIRROR_DIAMETER
             self.set_pixel_pos_from_file(ds.get('PosPixel_1.txt'))
 
         elif self.camera_type in ['flash', '2']:
             self.type="mst"
             self.focal = MST_FOCAL
+            self.mirror_diameter = MST_MIRROR_DIAMETER
             self.set_pixel_pos_from_file(ds.get('PosPixel_2.txt'))
 
         elif self.camera_type in ['lst_cam', '0']:
             self.type="lst"
             self.focal = LST_FOCAL
+            self.mirror_diameter = LST_MIRROR_DIAMETER
             self.set_pixel_pos_from_file(ds.get('PosPixel_0.txt'))
 
         else:
-            print("The camera type {0} is not recognised. A square camera will be set by default.".format(self.camera_type))
+            print("The camera type {0} is not recognised. A square camera will be set by default."
+                  .format(self.camera_type))
             self.camera_type = 'default'
             self.set_default_cam()
 
-        self.pixel_size = get_pixel_size(self.pixel_tab)
+        self.pixel_radius = get_pixel_radius(self.pixel_tab)
 
 
     def display_info(self):
         """Just display some info about telescope and camera"""
         print('')
-        print("Telescope number ", self.id)
-        print("Type ", self.type)
-        print("Camera type: ", self.camera_type)
-        print("Mirror Center: ", self.mirror_center)
-        print("normal ", self.normal)
-        print("focal ", self.focal)
-        print("Pixel position datafile ", self.pixpos_filename)
+        print("Telescope number: {:d}".format(self.id))
+        print("Camera type: {}".format(self.camera_type))
+        print("Mirror center position: {}"
+              .format(np.array2string(self.mirror_center, precision=3, suppress_small=True)))
+        print("Camera center position: {}"
+              .format(np.array2string(self.camera_center, precision=3, suppress_small=True)))
+        print("Pointing vector: {}"
+              .format(np.array2string(self.normal, precision=3, suppress_small=True)))
+        print("Focal value: {:.2f}".format(self.focal))
+        print("Pixel radius {:.2f}".format(self.pixel_radius))
+        print("Camera size: {:.2f}".format(self.camera_size))
 
 
     def pointing_object(self, point):
@@ -147,11 +168,12 @@ class Telescope:
         self.normal = self.normal / np.sqrt((self.normal ** 2).sum())
 
 
-def get_pixel_size(pixel_tab):
+
+def get_pixel_radius(pixel_tab):
     """
-    Compute the size of a pixel from the array of pixels positions assuming that all pixels have the same size
-    and that the grid is regular and without holes between pixels
-    The pixel size corresponds to its longest length between two edges points
+    Compute the minimal distance between two pixels from the array of pixels positions.
+    The underlying assumption is that all pixels have the same size and shape
+    The pixel radius corresponds to its longest length between two edges points
     Parameters
     ----------
     pixel_tab: numpy array (N,2)
@@ -877,13 +899,13 @@ def telescopes_unicity(tel_list):
     -------
     Boolean: True if all telescopes in the list are unique
     """
-    bool = True
+    are_unique = True
     for tel1 in tel_list:
         for tel2 in tel_list:
             if ((tel1.mirror_center == tel2.mirror_center).all() and tel1.id != tel2.id):
                 print("Telescopes {0} and {1} are both at the same position {3}".format(tel1.id, tel2.id, tel1.mirror_center))
-                bool = False
-    return bool
+                are_unique = False
+    return are_unique
 
 
 def particle_cone_angle(particle_position, particle_beta=1, air_index=1):
