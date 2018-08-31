@@ -158,7 +158,7 @@ def plot_array(telescope_array, ax=None, **kwargs):
     ax = plt.gca() if ax is None else ax
 
     for tel in telescope_array:
-        ax.scatter(tel.mirror_center[0], tel.mirror_center[1])
+        ax.scatter(tel.mirror_center[0], tel.mirror_center[1], **kwargs)
         ax.annotate(str(tel.id), (tel.mirror_center[0] + 20, tel.mirror_center[1] + 20))
     ax.axis('equal')
     ax.set_xlabel("x [m]")
