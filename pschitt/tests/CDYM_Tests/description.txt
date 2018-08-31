@@ -1,0 +1,14 @@
+Griesen profile added to sky_objects.py allowing for random distribution of particles along Z axis with a distribution dependent on the initial energy and interaction height of the shower.
+
+X and Y profiles set by random Gaussian distributions scaled such that on average 90% of particles reside within 1 Moliere Radius of the shower axis (at sea level).
+
+If shower = pschitt.sky_objects.shower:
+-> Simulation using Greisen Function activated with "shower.Greisen_Profile()"
+-> New shower input parameters needed in run script:
+--> "shower.energy_primary = number[eV]" : sets energy of the primary gamma-ray photon.
+--> "shower.height_of_first_interaction = height[m]" : sets the height at which the initial photon interacts with the atmosphere.
+--> "shower.scale = number[-]" : sets the resolution of the distribution function produced from the Greisen Function. A lower number corresponds to a higher number of simulated particles. (Recommended range: 1-100).
+
+Inputs no longer needed in run script:
+-> "shower.number_of_particles" : determined by primary energy.
+-> "shower_top/length/width : determined by preprogrammed functions (see top of comment).

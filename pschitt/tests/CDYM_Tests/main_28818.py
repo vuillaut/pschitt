@@ -23,10 +23,10 @@ SHOWER SETUP - Edit the variables to change the shape of the air shower.
 shower = sky.shower()
 
 # X, Y, Z coordinates of impact - VARIABLE [meters] (x & y range: -1000 to 1000) #
-shower.impact_point = np.array([80,60,0]) 
+shower.impact_point = np.array([80,60,0])
 
 # Energy of Primary Photon [eV] - VARLIBLE [Electron Volts] #
-shower.energy_primary = 10e12 
+shower.energy_primary = 10e12
 
 # Defining shower direction - VARIABLE [Altitude, Azimuth] #
 shower.alt = math.radians(90)
@@ -60,15 +60,15 @@ taz = math.radians(0)
 
 # Telescope setup - VARIABLE - Types you can choose: default, gct, dc, astri, sct, flash, nectar and lst_cam #
 tel_normal = geo.altaz_to_normal(talt, taz)
-tel1 = geo.Telescope([200,200,0], tel_normal, camera_type='default') 
+tel1 = geo.Telescope([200,200,0], tel_normal, camera_type='default')
 tel2 = geo.Telescope([-200,200,0], tel_normal, camera_type='default')
 tel3 = geo.Telescope([-200,-200,0], tel_normal, camera_type='default')
 tel4 = geo.Telescope([200,-200,0], tel_normal, camera_type='default')
 tel5 = geo.Telescope([0,0,0], tel_normal, camera_type='default')
-tel6 = geo.Telescope([1000,-500,0], tel_normal, camera_type='default') 
+tel6 = geo.Telescope([1000,-500,0], tel_normal, camera_type='default')
 
 # Creating a list of the telescopes - VARIABLE - You need to add all the above telescope IDs to this list (or only the telescopes you want to simulate) #
-alltel = [tel1, tel2, tel3, tel4, tel5, tel6] 
+alltel = [tel1, tel2, tel3, tel4, tel5, tel6]
 
 
 """
@@ -79,7 +79,7 @@ END OF TELESCOPE ARRAY SETUP
 Beyond this point, you should only need to change the test number in the output file names. The file names will automatically correspond to the options you selected above for the energy, initial height, scale and number of telescopes.
 
 
-The quickest way to change the output file name for each test run is to 'find and replace, replace all' "T1" with "T2" etc (test 1, test 2 etc...). 
+The quickest way to change the output file name for each test run is to 'find and replace, replace all' "T1" with "T2" etc (test 1, test 2 etc...).
 """
 
 
@@ -92,8 +92,8 @@ sca = int(shower.scale)
 ntel = int(len(alltel))
 
 if Eig >= 1000:
-	ShEn = Eit 
-else: 
+	ShEn = Eit
+else:
 	ShEn = Eig
 
 # Plotting the system arrangement with the shower
@@ -102,7 +102,7 @@ viz.plot_shower3d(shower, alltel, density_color=True)
 if Eig >= 1000:
 	plt.title("3d Shower Plot (%i TeV, %i km, Scale: %i, NumTel: %i)" %(Eit, hfi, sca, ntel))
 	plt.savefig('shower3D_%i_TeV_%i_km_scale_%i_num_%i_T1.png' %(Eit, hfi, sca, ntel), fmt='png', dpi=300)
-else: 
+else:
 	plt.title("3d Shower Plot (%i GeV, %i km, Scale: %i, NumTel: %i)" % (Eig, hfi, sca, ntel))
 	plt.savefig('shower3D_%i_GeV_%i_km_scale_%i_num_%i_T1.png' %(Eig, hfi, sca, ntel), fmt='png', dpi=300)
 #plt.savefig('shower3D_%i_GeV_%i_km_scale_%i_num_%i_T1.png' %(Eig, hfi, sca, ntel), fmt='png', dpi=300) # Normal file type = eps
@@ -115,7 +115,7 @@ plt.axis('equal')
 if Eig >= 1000:
 	plt.title("Shower Projection (%i TeV, %i km, Scale: %i, NumTel: %i)" %(Eit, hfi, sca, ntel))
 	plt.savefig('projection_%i_TeV_%i_km_scale_%i_num_%i_T1.eps' %(Eit, hfi, sca, ntel), fmt='eps')
-else: 
+else:
 	plt.title("Shower Projection (%i GeV, %i km, Scale: %i, NumTel: %i)" %(Eig, hfi, sca, ntel))
 	plt.savefig('projection_%i_GeV_%i_km_scale_%i_num_%i_T1.eps' %(Eig, hfi, sca, ntel), fmt='eps')
 #plt.savefig('projection_%i_GeV_%i_km_scale_%i_num_%i_T1.eps' %(Eig, hfi, sca, ntel), fmt='eps')
@@ -129,7 +129,7 @@ plt.xlabel("X [m]")
 if Eig >= 1000:
 	plt.title("Particle Distribution in x (%i TeV, %i km, Scale: %i, NumTel: %i)" %(Eit, hfi, sca, ntel))
 	plt.savefig('x_distrib_%i_TeV_%i_km_scale_%i_num_%i_T1.png' %(Eit, hfi, sca, ntel), fmt='png')
-else: 
+else:
 	plt.title("Particle Distribution in x (%i GeV, %i km, Scale: %i, NumTel: %i)" %(Eig, hfi, sca, ntel))
 	plt.savefig('x_distrib_%i_GeV_%i_km_scale_%i_num_%i_T1.png' %(Eig, hfi, sca, ntel), fmt='png')
 #plt.savefig('x_distrib_%i_GeV_%i_km_scale_%i_num_%i_T1.png' %(Eig, hfi, sca, ntel), fmt='png')
@@ -142,7 +142,7 @@ plt.xlabel("Y [m]")
 if Eig >= 1000:
 	plt.title("Particle Distribution in y (%i TeV, %i km, Scale: %i, NumTel: %i)" %(Eit, hfi, sca, ntel))
 	plt.savefig('y_distrib_%i_TeV_%i_km_scale_%i_num_%i_T1.png' %(Eit, hfi, sca, ntel), fmt='png')
-else: 
+else:
 	plt.title("Particle Distribution in y (%i GeV, %i km, Scale: %i, NumTel: %i)" %(Eig, hfi, sca, ntel))
 	plt.savefig('y_distrib_%i_GeV_%i_km_scale_%i_num_%i_T1.png' %(Eig, hfi, sca, ntel), fmt='png')
 #plt.savefig('y_distrib_%i_GeV_%i_km_scale_%i_num_%i_T1.png' %(Eig, hfi, sca, ntel), fmt='png')
@@ -156,7 +156,7 @@ plt.xlabel("Z [m]")
 if Eig >= 1000:
 	plt.title("Particle Distribution in z (%i TeV, %i km, Scale: %i, NumTel: %i)" %(Eit, hfi, sca, ntel))
 	plt.savefig('z_distrib_%i_TeV_%i_km_scale_%i_num_%i_T1.png' %(Eit, hfi, sca, ntel), fmt='png')
-else: 
+else:
 	plt.title("Particle Distribution in z (%i GeV, %i km, Scale: %i, NumTel: %i)" %(Eig, hfi, sca, ntel))
 	plt.savefig('z_distrib_%i_GeV_%i_km_scale_%i_num_%i_T1.png' %(Eig, hfi, sca, ntel), fmt='png')
 #plt.savefig('z_distrib_%i_GeV_%i_km_scale_%i_num_%i_T1.png' %(Eig, hfi, sca, ntel), fmt='png')
@@ -177,7 +177,7 @@ ax.legend()
 if Eig >= 1000:
 	plt.title("Map of Array Site (%i TeV, %i km, Scale: %i, NumTel: %i)" %(Eit, hfi, sca, ntel))
 	plt.savefig('rep_Array_map_%i_TeV_%i_km_scale_%i_num_%i_T1.png' %(Eit, hfi, sca, ntel), fmt='png')
-else: 
+else:
 	plt.title("Map of Array Site (%i GeV, %i km, Scale: %i, NumTel: %i)" %(Eig, hfi, sca, ntel))
 	plt.savefig('rep_Array_map_%i_GeV_%i_km_scale_%i_num_%i_T1.png' %(Eig, hfi, sca, ntel), fmt='png')
 #plt.savefig('rep_Array_map_%i_GeV_%i_km_scale_%i_num_%i_T1.png' %(Eig, hfi, sca, ntel), fmt='png')
@@ -194,7 +194,7 @@ for tel, ax in zip(alltel, axes):
     ax.set_title("Tel {0}\nSignal sum = {1}".format(tel.id, tel.signal_hist.sum()))
 if Eig >= 1000:
 	plt.savefig('scopes_%i_TeV_%i_km_scale_%i_num_%i_T1.png' %(Eit, hfi, sca, ntel), fmt='png')
-else: 
+else:
 	plt.savefig('scopes_%i_GeV_%i_km_scale_%i_num_%i_T1.png' %(Eig, hfi, sca, ntel), fmt='png')
 #plt.savefig('scopes_%i_GeV_%i_km_scale_%i_num_%i_T1.png' %(Eig, hfi, sca, ntel), fmt='png') #normal format = eps
 
@@ -211,7 +211,7 @@ viz.display_stacked_cameras(alltel, s=14)
 if Eig >= 1000:
 	plt.title("Stack of Camera Images (%i TeV, %i km, Scale: %i, NumTel: %i)" %(Eit, hfi, sca, ntel))
 	plt.savefig('Stacked_cameras_%i_TeV_%i_km_scale_%i_num_%i_T1.eps' %(Eit, hfi, sca, ntel), fmt='eps')
-else: 
+else:
 	plt.title("Stack of Camera Images (%i GeV, %i km, Scale: %i, NumTel: %i)" %(Eig, hfi, sca, ntel))
 	plt.savefig('Stacked_cameras_%i_GeV_%i_km_scale_%i_num_%i_T1.eps' %(Eig, hfi, sca, ntel), fmt='eps')
 #plt.savefig('Stacked_cameras_%i_GeV_%i_km_scale_%i_num_%i_T1.eps' %(Eig, hfi, sca, ntel), fmt='eps') #normal format = eps
@@ -225,7 +225,7 @@ for tel, hp in zip(triggered_telescopes, HP):
 if Eig >= 1000:
 	plt.title("Hillas Reconstruction (%i TeV, %i km, Scale: %i, NumTel: %i)" %(Eit, hfi, sca, ntel))
 	plt.savefig('Hillas_%i_TeV_%i_km_scale_%i_num_%i_T1.png' %(Eit, hfi, sca, ntel), fmt='png', dpi=300)
-else: 
+else:
 	plt.title("Hillas Reconstruction (%i GeV, %i km, Scale: %i, NumTel: %i)" %(Eig, hfi, sca, ntel))
 	plt.savefig('Hillas_%i_GeV_%i_km_scale_%i_num_%i_T1.png' %(Eig, hfi, sca, ntel), fmt='png', dpi=300)
 #plt.savefig('Hillas_%i_GeV_%i_km_scale_%i_num_%i_T1.png' %(Eig, hfi, sca, ntel), fmt='png', dpi=300) #normal format = eps
@@ -237,7 +237,7 @@ viz.plot_array_reconstructed(triggered_telescopes, HP, shower.impact_point)
 if Eig >= 1000:
 	plt.title("Reconstructed Array Directions (%i TeV, %i km, Scale: %i, NumTel: %i)" %(Eit, hfi, sca, ntel))
 	plt.savefig('Array_direct_%i_TeV_%i_km_scale_%i_num_%i_T1.eps' %(Eit, hfi, sca, ntel), fmt='eps')
-else: 
+else:
 	plt.title("Reconstructed Array Directions (%i GeV, %i km, Scale: %i, NumTel: %i)" %(Eig, hfi, sca, ntel))
 	plt.savefig('Array_direct_%i_GeV_%i_km_scale_%i_num_%i_T1.eps' %(Eig, hfi, sca, ntel), fmt='eps')
 #plt.savefig('Array_direct_%i_GeV_%i_km_scale_%i_num_%i_T1.eps' %(Eig, hfi, sca, ntel), fmt='eps')
