@@ -38,7 +38,11 @@ def mask_transmitted_particles(tel, shower):
 
     # Compute the transmission profile relative to Cherenkov cone for each particle:
     shower_direction = geo.altaz_to_normal(shower.alt, shower.az)
-    angles = np.array([geo.angle(shower_direction, particle - tel.mirror_center) for particle in shower.particles])
+    # angles = np.array([geo.angle(shower_direction, particle - tel.mirror_center) for particle in shower.particles])
+    # faster implementation
+    tmp = (shower.particles - tel.mirror_center)
+    angles = np.arccos(np.sum(shower_direction * tmp, axis=1) / np.linalg.norm(tmp, axis=1))
+
 
     # thetas = np.array([geo.angle(tel.normal, particle - tel.mirror_center) for particle in shower.particles])
 

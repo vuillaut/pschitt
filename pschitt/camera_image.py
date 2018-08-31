@@ -48,6 +48,8 @@ def find_closest_pixel(pos, pixel_tab):
 def photons_to_signal(photon_pos_tab, pixel_tab, pixel_radius):
     """
     Count the number of photons in each pixel of the pixel_tab (camera)
+    This implementation surely could be improved.
+    If using the default camera, use the faster implementation `default_camera_photons_counter`
 
     Parameters
     ----------
@@ -158,8 +160,6 @@ def add_noise_gaussian(signal, lam=10):
     return signal
 
 
-
-
 def shower_image_in_camera(telescope, photon_pos_tab, lam=0, result_filename=None):
     """
     Compute the camera image given the positions of the photons in the camera frame.
@@ -176,7 +176,11 @@ def shower_image_in_camera(telescope, photon_pos_tab, lam=0, result_filename=Non
     -------
     Numpy 1D array with the photon count in each pixel
     """
-    pixels_signal = photons_to_signal(photon_pos_tab, telescope.pixel_tab, telescope.pixel_radius)
+
+    if telescope.camera_type == 'default':
+        pixels_signal = default_camera_photons_counter(telescope, photon_pos_tab)
+    else:
+        pixels_signal = photons_to_signal(photon_pos_tab, telescope.pixel_tab, telescope.pixel_radius)
 
     pixels_signal = add_noise_gaussian(pixels_signal, lam)
     if result_filename:
@@ -249,3 +253,32 @@ def array_shower_imaging(shower, tel_array, noise):
         shower_camera_image(shower, tel, noise)
 
 
+def default_camera_photons_counter(telescope, photons_in_camera):
+    """
+    This function counts the number of photons in each pixel for the default camera.
+    This implementation uses a 2D histogram, which is a much faster implementation than
+    `photons_to_signal`.
+
+    Parameters
+    ----------
+    telescope: `Telescope` class
+    photons_in_camera: 2D `numpy.ndarray` - list the positions (x,y) of each photon from the shower in the camera
+
+    Returns
+    -------
+    Fill `telescope.signal_hist` and returns it
+    """
+    assert telescope.camera_type == 'default'
+
+    num_pix = int(np.sqrt(len(telescope.pixel_tab)))
+    bins = [np.linspace(telescope.pixel_tab[:, 0].min() - telescope.pixel_radius,
+                        telescope.pixel_tab[:, 0].max() + telescope.pixel_radius,
+                        num_pix + 1),
+            np.linspace(telescope.pixel_tab[:, 1].min() - telescope.pixel_radius,
+                        telescope.pixel_tab[:, 1].max() + telescope.pixel_radius,
+                        num_pix + 1)]
+
+    hist = np.histogram2d(photons_in_camera[:, 0], photons_in_camera[:, 1], bins=bins)
+
+    telescope.signal_hist = hist[0].ravel()
+    return telescope.signal_hist
