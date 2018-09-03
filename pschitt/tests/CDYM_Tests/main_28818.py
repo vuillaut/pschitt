@@ -9,13 +9,14 @@ import pschitt.sky_objects as sky
 import pschitt.camera_image as ci
 import pschitt.hillas as hillas
 import pschitt.vizualisation as viz
-from importlib import reload
+#from importlib import reload
 import math
 
 """
 ------------------------
-SHOWER SETUP - Edit the variables to change the shape of the air shower.
+SHOWER SETUP: Edit the variables to change the shape of the air shower.
 ------------------------
+
 """
 
 ## Creating a Shower ##
@@ -26,7 +27,7 @@ shower = sky.shower()
 shower.impact_point = np.array([80,60,0])
 
 # Energy of Primary Photon [eV] - VARLIBLE [Electron Volts] #
-shower.energy_primary = 10e12
+shower.energy_primary = 300e9
 
 # Defining shower direction - VARIABLE [Altitude, Azimuth] #
 shower.alt = math.radians(90)

@@ -14,8 +14,9 @@ from copy import copy
 #from sampling import z1 # Added 01/8/18
 
 """
-Previous Version Date: 28/8/18
-Latest Changes: 31/8/18
+Previous Version Date: 28/8/18.
+
+Latest Changes: 31/8/18.
 """
 
 
@@ -511,7 +512,7 @@ def scaled_ellipsoide_alongz(E, h_init): # Name change 19/4/18
     # old scale for x and y: scale=((2*RMol_ShMax)/1.64485362692)
     ShMax = showermax(E) # Added 18/4/18
     shower_center = [0, 0, ShMax] # Added 18/4/18
-    RMol_ShMax = moliere_radius_ShMax(E) # Added 17/4/18
+    #RMol_ShMax = moliere_radius_ShMax(E) # Added 17/4/18
     n = particles_in_bins(h_init,E)[1] # Added 23/4/18
     x = np.random.normal(loc=shower_center[0], scale=((2*Rm_0)/1.64485362692), size=n) # Changed 19/4/18
     y = np.random.normal(loc=shower_center[1], scale=((2*Rm_0)/1.64485362692), size=n) # Changed 19/4/18
@@ -664,7 +665,7 @@ def Greisen_Function(m, n, o, scale):
     #param = shower_parameterisation(E, h_init, scale)
     def Greisen_Formula(x):
         T = x / Xo # Slant depth
-        E_J = m
+        #E_J = m
         Tmax = n
         s = ( (3 * T) / (T + (2 * Tmax)) ) # Shower age
         Ne = ( 0.31 / np.sqrt(Tmax) ) * np.exp(T) * (s**((-3*T)/2))
@@ -710,7 +711,7 @@ def Greisen_Profile_alongz(E, h_init, scale):
     z3 = dist(Ntot)
     z2 = np.squeeze(z3)
     z1 = [] # This and folling line added to fix HFI bug (needed to add XFI to values in X array) 31/8/18
-    for i in z2: 
+    for i in z2:
         z1.append(i+param[2])
     z = []
     for i in z1:
