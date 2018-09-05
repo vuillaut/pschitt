@@ -28,5 +28,11 @@ def test_shower_camera_image():
     shower.number_of_particles = 3
     shower.particles = np.array([[0, 0, 20], [0, 0, 20], [0, 0, 20]])
     tel = geo.Telescope([10, 0, 0], [-1./3., 0, 2./3.])
-    tel.pixel_tab = np.array([[0,0],[0,1],[1,0],[-1,1]])
+
+    tel.pixel_tab = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
     assert (ci.shower_camera_image(shower, tel) == np.array([3, 0, 0, 0])).all()
+
+    tel.pixel_tab = np.array([[0, 0], [0, 1], [1, 0], [-1, 1]])
+    tel.camera_type = 'not_std'
+    assert (ci.shower_camera_image(shower, tel) == np.array([3, 0, 0, 0])).all()
+
