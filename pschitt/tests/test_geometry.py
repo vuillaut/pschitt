@@ -54,3 +54,17 @@ def test_is_particle_visible():
     particle_direction = np.array([-1, 0, -2])
     particle_energy = 1
     assert geo.is_particle_visible(particle_position, particle_direction, particle_energy, telescope)
+
+
+def test_angles_to_particles():
+    from pschitt import sky_objects as sky
+    shower = sky.shower()
+    shower.alt = np.deg2rad(90)
+    shower.az = 0
+
+    shower.particles = np.array([[0, 0, 100], [100, 0, 100], [0, 100, 100]])
+    position = np.array([0, 0, 0])
+
+    angles = geo.angles_to_particles(position, shower)
+    print(angles)
+    assert np.isclose(angles, [0, np.pi/4, np.pi/4]).all()
