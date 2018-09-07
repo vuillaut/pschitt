@@ -339,7 +339,7 @@ def plot_shower_ground_intensity_map(shower, x=np.linspace(-2000, 2000), y=np.li
 
     ax = plt.gca() if ax is None else ax
     x_grid, y_grid = np.meshgrid(x, y)
-    intensity_map = intensity_map(shower, x, y)
-    ax = plot_intensity_map(x_grid, y_grid, intensity_map, ax=ax, **kwargs)
+    i_map = intensity_map(shower, x, y)
+    ax = plot_intensity_map(x_grid, y_grid, i_map, ax=ax, **kwargs)
 
     return ax
