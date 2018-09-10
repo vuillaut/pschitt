@@ -1080,3 +1080,24 @@ def direction_ground(psi, alt, az):
     dy = -np.cos(psi) * np.cos(az) + np.sin(psi) * np.sin(az) * np.sin(alt)
 
     return np.arctan2(dx, dy)
+
+
+def angles_to_particles(position, shower):
+    """
+    Compute all the angles between the given position and shower particles
+
+    Parameters
+    ----------
+    position : `numpy.ndarray` of shape (3,)
+    shower : shower class
+
+    Returns
+    -------
+    `numpy.ndarray` of shape (3,len(shower.particles))
+    """
+
+    n = altaz_to_normal(shower.alt, shower.az)
+    m = shower.particles - position
+    m_norm = np.linalg.norm(m, axis=1)
+    m = m / np.transpose([m_norm, m_norm, m_norm])
+    return np.arccos(np.dot(n, m.T))
