@@ -16,7 +16,7 @@ from copy import copy
 """
 Previous Version Date: 28/8/18.
 
-Latest Changes: 31/8/18.
+Latest Changes: 10/9/18.
 """
 
 
@@ -78,7 +78,7 @@ class shower:
         self.height_of_first_interaction = 0 # Added 18/4/18
         self.number_of_particles = 10
         self.particles = np.zeros((self.number_of_particles, 3))
-        self.particles_angular_emission_profile = em.angular_profile.constant
+        self.particles_angular_emission_profile = em.angular_profile.heaviside
         self.particles_angular_emission_profile_kwargs = {}
 
     def linear_segment(self, shower_first_interaction, shower_bot):
@@ -616,6 +616,52 @@ class Distribution(object): # Added 7/8/18
             index = index + np.random.uniform(size=index.shape)
         return self.transform(index)
 
+def AtmosphericDepth(Height):
+    """
+    This function takes an input height [m] and converts it to an atmospheric depth in [g cm^-2].
+
+    Parameters
+    ----------
+    Height: A height asl [m] - float, can be ndarray
+    
+    Returns
+    ---------- 
+    AtmDep: The equivilent atmospheric depth input atmospheric height [g cm^-2] - float, can be ndarray if input is ndarray.
+    """
+    AtmDep = ((Po*np.exp(-Height/H))/(10 * g))
+    return AtmDep
+
+def Height(AtmDep):
+    """
+    This function takes an input atmospheric depth [g cm^-2] and converts it to a height in [m].
+
+    Parameters
+    ----------
+    AtmDep: An atmospheric depth [g cm^-2] - float, can be ndarray
+    
+    Returns
+    ---------- 
+    Height: The equivilent height in meters of the input atmospheric depth [m] - float, can be ndarray if input is ndarray.
+    """
+    Height = (-H*np.log((AtmDep*10*g)/(Po)))
+    return Height
+
+def Greisen_Formula(Xshower, Tmax):
+    """
+    This function defines the Greisen Formula for the calculation of particle number in a shower at some atmospheric depth.
+
+    Parameters
+    ----------
+    Xshower: Shower depth at which you want to calculate the number of shower particles [g cm^-2] - float, can be ndarray.
+
+    Returns
+    ----------
+    Ne: The number of true particles in the shower at an atmospheric depth correspinding to Xshower [-] - int, can be ndarray if input is ndarray.
+    """
+    T = Xshower / Xo # Slant depth
+    s = ( (3 * T) / (T + (2 * Tmax)) ) # Shower age
+    Ne = ( 0.31 / np.sqrt(Tmax) ) * np.exp(T) * (s**((-3*T)/2))
+    return Ne
 
 def shower_parameterisation(E, h_init, scale):
     """
@@ -635,9 +681,6 @@ def shower_parameterisation(E, h_init, scale):
     Xasl: The atmospheric depth of observation level [g cm^-2] - int
     Xdist: The distance in atmospheric depth between XFI and Xasl [g cm^-2] - int
     """
-    def AtmosphericDepth(x):
-        AtmDep = ((Po*math.exp(-x/H))/(10 * g))
-        return AtmDep
     E_J = E*1.602e-19
     Tmax = np.log( E_J / Ec_J ) # Slant depth of shower maximum
     XFI = int(AtmosphericDepth(h_init)) # Atmospheric depth of first interaction /g cm^-2
@@ -645,35 +688,27 @@ def shower_parameterisation(E, h_init, scale):
     Xdist = int(Xasl - XFI)
     return E_J, Tmax, XFI, Xasl, Xdist
 
-def Greisen_Function(m, n, o, scale):
+def Greisen_Distribution(E_J, Tmax, Xdist, scale): # Edited input names to be more clear 10/9/18
     """
     This function calculates the shape of the Greisen function for an air shower of the user specified initial energy and first interaction height.
 
     Parameters
     ----------
-    m: The initial energy in Joules [J] - float
-    n: The slant depth of shower maximum [none] - float
-    o: The distance between the height of first interaction and the observation height [g cm^-2] - float
+    E_J: The initial energy in Joules [J] - float
+    Tmax: The slant depth of shower maximum [none] - float
+    Xdist: The distance between the height of first interaction and the observation height [g cm^-2] - float
     scale: Step size of function, effectively shower resoltion [none] - int
 
     Returns
     ----------
     X: A range of depth values from the observation height to first interaction height with a spacing equal to the scale [g cm^-2] - array
-    Ntot: The number of 'particles' in the shower simulation at this resolution [none] - int
+    Ntot: The total number of 'particles' in the shower simulation at this resolution [none] - int
     Value: The value of the array argument of X that contains the maximum number of shower particles (shower maximum) [none] - int
     """
     #param = shower_parameterisation(E, h_init, scale)
-    def Greisen_Formula(x):
-        T = x / Xo # Slant depth
-        #E_J = m
-        Tmax = n
-        s = ( (3 * T) / (T + (2 * Tmax)) ) # Shower age
-        Ne = ( 0.31 / np.sqrt(Tmax) ) * np.exp(T) * (s**((-3*T)/2))
-        return Ne
-    X = range(0, o, scale)
-    N = []
-    for x in X:
-        N.append(Greisen_Formula(x))
+    Xtop = int(Xdist + scale)
+    X = np.arange(0, Xtop, scale) # Changed from range to np.arange to remove loop 9/10/18
+    N = Greisen_Formula(X, Tmax)
     Ntot = int(sum(N))
     value = np.argmax(N)
     return X, Ntot, value
@@ -695,11 +730,9 @@ def Greisen_Profile_alongz(E, h_init, scale):
     param = shower_parameterisation(E, h_init, scale)
     E_J = param[0]
     Tmax = param[1]
+    XFI = param[2]
     Xdist = param[4]
-    Greisen = Greisen_Function(E_J, Tmax, Xdist, scale)
-    def Height(x):
-        Height = (-H*math.log((x*10*g)/(Po)))
-        return Height
+    Greisen = Greisen_Distribution(E_J, Tmax, Xdist, scale)
     X = Greisen[0]
     value = Greisen[2]
     Ntot = Greisen[1]
@@ -710,20 +743,19 @@ def Greisen_Profile_alongz(E, h_init, scale):
     dist = Distribution(pdf)
     z3 = dist(Ntot)
     z2 = np.squeeze(z3)
-    z1 = [] # This and folling line added to fix HFI bug (needed to add XFI to values in X array) 31/8/18
-    for i in z2:
-        z1.append(i+param[2])
-    z = []
-    for i in z1:
-        z.append(Height(i))
+    #print('This is z2:', z2) # test
+    #print(type(z2)) # test
+    z1 = z2 + XFI # Line added to remove loop 11/9/18
+    #print('This is z1:', z1) # test
+    #print(type(z1)) # test
+    z = Height(z1) # Line added to remove loop 11/9/18
     shower_center = [0, 0, ShMax]
     x = np.random.normal(loc=shower_center[0], scale=((2*Rm_0)/1.64485362692), size=Ntot)
     y = np.random.normal(loc=shower_center[1], scale=((2*Rm_0)/1.64485362692), size=Ntot)
-    """ # For use testing the x, y, z outputs #
-    print('z print 1: ', z[0], z[1], z[-1])
-    print('x print 1: ', x[0], x[1], z[-1])
-    print('y print 1: ', y[0], y[1], y[-1])
-    """
+    # For use testing the x, y, z outputs #
+    #print('z print 1: ', z[0], z[1], z[-1])
+    #print('x print 1: ', x[0], x[1], z[-1])
+    #print('y print 1: ', y[0], y[1], y[-1])
     return np.array([x, y, z]).T
 
 def Greisen_Profile(E, h_init, scale, alt, az, impact_point):

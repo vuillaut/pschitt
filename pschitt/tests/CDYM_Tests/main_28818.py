@@ -37,7 +37,7 @@ shower.az = math.radians(0)
 shower.height_of_first_interaction = 25000
 
 # Defining resolution of the shower - VARIABLE [g cm^-2] #
-shower.scale = 100
+shower.scale = 10
 
 # Defining longitudinal shower shape - don't change this #
 shower.Greisen_Profile()
@@ -61,12 +61,12 @@ taz = math.radians(0)
 
 # Telescope setup - VARIABLE - Types you can choose: default, gct, dc, astri, sct, flash, nectar and lst_cam #
 tel_normal = geo.altaz_to_normal(talt, taz)
-tel1 = geo.Telescope([200,200,0], tel_normal, camera_type='default')
-tel2 = geo.Telescope([-200,200,0], tel_normal, camera_type='default')
-tel3 = geo.Telescope([-200,-200,0], tel_normal, camera_type='default')
-tel4 = geo.Telescope([200,-200,0], tel_normal, camera_type='default')
-tel5 = geo.Telescope([0,0,0], tel_normal, camera_type='default')
-tel6 = geo.Telescope([1000,-500,0], tel_normal, camera_type='default')
+tel1 = geo.Telescope([200,200,0], tel_normal, camera_type='0')
+tel2 = geo.Telescope([-200,200,0], tel_normal, camera_type='0')
+tel3 = geo.Telescope([-200,-200,0], tel_normal, camera_type='0')
+tel4 = geo.Telescope([200,-200,0], tel_normal, camera_type='0')
+tel5 = geo.Telescope([0,0,0], tel_normal, camera_type='0')
+tel6 = geo.Telescope([1000,-500,0], tel_normal, camera_type='0')
 
 # Creating a list of the telescopes - VARIABLE - You need to add all the above telescope IDs to this list (or only the telescopes you want to simulate) #
 alltel = [tel1, tel2, tel3, tel4, tel5, tel6]
@@ -252,5 +252,12 @@ if len(triggered_telescopes)>1:
     print("Reconstructed with simple average = %s \tError = %.2fm" % (pa, math.sqrt(((shower.impact_point-pa)**2).sum())))
     print("Reconstructed with ponderation and cut = %s \tError = %.2fm" % (p, math.sqrt(((shower.impact_point-p)**2).sum())))
 
+# Plotting Lightpool
+plt.clf()
+
+plt.figure()
+viz.plot_shower_ground_intensity_map(shower, x=np.linspace(-2000, 2000), y=np.linspace(-2000, 2000), ax=None)
+plt.show()
+plt.clf()
 
 
