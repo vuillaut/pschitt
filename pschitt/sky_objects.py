@@ -150,7 +150,7 @@ class shower:
         self.particles = gaussian_ellipsoide(shower_top_altitude, shower_length, shower_width, \
                                          self.alt, self.az, self.impact_point, self.number_of_particles)
 
-# MODIFICATION 17,21/4/18 #
+
 
     def ShowerMax_depth(self):
         """
@@ -189,10 +189,6 @@ class shower:
         self.number_in_bins = particles_in_bins(self.height_of_first_interaction, self.energy_primary)
         return self.number_in_bins
 
-# END OF MODIFICATION 17,21/4/18 #
-
-# MODIFICATION 16,18,19/4/18 #
-
     def scaled_ellipsoide_alongz(self):
         """
         Parameters
@@ -210,17 +206,29 @@ class shower:
         """
         self.particles = scaled_ellipsoide(self.energy_primary, self.height_of_first_interaction, self.alt, self.az, self.impact_point)
 
-# END OF MODIFICATION 16,18,19/4/18 #
-
-# MERGED FROM PROFILES 28/9/18 #
-
     def Greisen_Profile_alongz(self):
+        """
+        Apply `pschitt.sky_objects.Greisen_Profile_alongz` to `shower.particles`
+        Requires:
+        - `shower.energy_primary`
+        - `shower.height_of_first_interaction`
+        """
+        assert self.energy_primary > 0
         self.particles = Greisen_Profile_alongz(self.energy_primary, self.height_of_first_interaction, self.scale)
 
     def Greisen_Profile(self):
+        """
+        Apply `pschitt.sky_objects.Greisen_Profile_alongz` to `shower.particles`
+        Requires:
+        - `shower.energy_primary`
+        - `shower.height_of_first_interaction`
+        - `shower.scale`
+        - `shower.alt`
+        - `shower.az`
+        - `shower.impact_point`
+        """
         self.particles = Greisen_Profile(self.energy_primary, self.height_of_first_interaction, self.scale, self.alt, self.az, self.impact_point)
 
-# END OF MERGE 28/9/18 #
 
     def shower_rot(self, alt, az):
         """
@@ -393,7 +401,6 @@ def gaussian_ellipsoide(shower_top_altitude, shower_length, shower_width, alt, a
     shower = gaussian_ellipsoide_alongz(shower_center, shower_length, shower_width, n)
     return shower_array_rot(shower, alt, az) + np.array(impact_point)
 
-# MODIFICATION 17,21/4/18 #
 
 def ShowerMax_depth(E):
     """
@@ -438,11 +445,6 @@ def moliere_radius_ShMax(E):
     Parameters
     ----------
     E: Energy of the primary photon [eV] - int
-    po_g: Density of air at sea level [g/cm^3] - float
-    H: Scale height of the atmosphere [m] - int
-    Xo: Radiation length of air [g/cm^2] - float
-    Es_J: ??? [J] - float
-    Ec_J: Electron critical energy [J] - float
 
     Returns
     ----------
@@ -459,7 +461,7 @@ def particles_in_bins(h_init, E):
     Parameters
     ----------
     h_init: Height of first photon interaction [m] - float
-    depth_shower_max: Atmospheric depth of shower maximum [g/cm^2] - float
+    E: Energy of the primary photon [eV] - int
 
     Returns
     ----------
@@ -490,14 +492,13 @@ def particles_in_bins(h_init, E):
     print('Total number of electrons: ', N_tot)
     return num, N_tot
 
-# END OF MODIFICATION 17,21/4/18 #
 
-# MODIFICATION 16,18,19,23/4/18 #
-
-def scaled_ellipsoide_alongz(E, h_init): # Name change 19/4/18
+def scaled_ellipsoide_alongz(E, h_init):
     """
-    Lateral distribution of particles described by a gaussian distribution where 90% lie within one moliere 	   radius at sea level.
-    Longitudinal distribution described by a laplacian distribution distribution folded about shower maximum and scaled to the difference between the height of first interaction and shower maximum.
+    Lateral distribution of particles described by a gaussian distribution where 90% lie within one moliere radius at
+    sea level.
+    Longitudinal distribution described by a Laplacian distribution folded about shower maximum and scaled
+    to the difference between the height of first interaction and shower maximum.
 
     Parameters
     ----------
@@ -510,15 +511,15 @@ def scaled_ellipsoide_alongz(E, h_init): # Name change 19/4/18
     Numpy array (3,n) - positions of particles in shower
     """
     # old scale for x and y: scale=((2*RMol_ShMax)/1.64485362692)
-    ShMax = showermax(E) # Added 18/4/18
-    shower_center = [0, 0, ShMax] # Added 18/4/18
+    ShMax = showermax(E)
+    shower_center = [0, 0, ShMax]
     #RMol_ShMax = moliere_radius_ShMax(E) # Added 17/4/18
-    n = particles_in_bins(h_init,E)[1] # Added 23/4/18
-    x = np.random.normal(loc=shower_center[0], scale=((2*Rm_0)/1.64485362692), size=n) # Changed 19/4/18
-    y = np.random.normal(loc=shower_center[1], scale=((2*Rm_0)/1.64485362692), size=n) # Changed 19/4/18
-    z1 = np.random.laplace(loc=shower_center[2], scale=((h_init-ShMax)/4), size=n) # Changed 19/4/18
-    z = (np.where((z1-ShMax)>=0, z1, z1+(2*abs(z1-ShMax)) ))# Added 13/7/18
-    return np.array([x, y, z]).T # Note: this was after the pink loop below
+    n = particles_in_bins(h_init,E)[1]
+    x = np.random.normal(loc=shower_center[0], scale=((2*Rm_0)/1.64485362692), size=n)
+    y = np.random.normal(loc=shower_center[1], scale=((2*Rm_0)/1.64485362692), size=n)
+    z1 = np.random.laplace(loc=shower_center[2], scale=((h_init-ShMax)/4), size=n)
+    z = (np.where((z1-ShMax)>=0, z1, z1+(2*abs(z1-ShMax)) ))
+    return np.array([x, y, z]).T # Note: this was after the loop below
 """
     z=[]
     for i in z1:
@@ -528,9 +529,10 @@ def scaled_ellipsoide_alongz(E, h_init): # Name change 19/4/18
                 z.append(i+(2*abs(i-ShMax))) # Added 19/4/18
 """
 
-def scaled_ellipsoide(E, h_init, alt, az, impact_point): # Name change 19/4/18
+def scaled_ellipsoide(E, h_init, alt, az, impact_point):
     """
-    n random points following gaussian lateral and laplacian longitudinal distributions. Ellipsoid originates 	    from direction (alt, az) and goes through impact point.
+    n random points following gaussian lateral and laplacian longitudinal distributions. Ellipsoid originates from
+    direction (alt, az) and goes through impact point.
 
     Parameters
     ----------
@@ -548,9 +550,7 @@ def scaled_ellipsoide(E, h_init, alt, az, impact_point): # Name change 19/4/18
     shower = scaled_ellipsoide_alongz(E, h_init)
     return shower_array_rot(shower, alt, az) + np.array(impact_point)
 
-# END MODIFICATION 16,18,19,23/4/18#
 
-### Shower Parameter Calculations - merged from sky_profiles 28/8/18###
 """
 Shower Parameter
 ----------
@@ -567,14 +567,14 @@ Xdist: The difference between Xasl and XFI [none]
 class Distribution(object): # Added 7/8/18
     """
     draws samples from a one dimensional probability distribution,
-    by means of inversion of a discrete inverstion of a cumulative density function
+    by means of inversion of a discrete inversion of a cumulative density function
 
     the pdf can be sorted first to prevent numerical error in the cumulative sum
     this is set as default; for big density functions with high contrast,
     it is absolutely necessary, and for small density functions,
     the overhead is minimal
 
-    a call to this distibution object returns indices into density array
+    a call to this distribution object returns indices into density array
     """
     def __init__(self, pdf, sort = True, interpolation = True, transform =lambda x: x):
         self.shape          = pdf.shape
@@ -592,12 +592,14 @@ class Distribution(object): # Added 7/8/18
             self.pdf = self.pdf[self.sortindex]
         #construct the cumulative distribution function
         self.cdf = np.cumsum(self.pdf)
+
     @property
     def ndim(self):
         return len(self.shape)
+
     @property
     def sum(self):
-        """cached sum of all pdf values; the pdf need not sum to one, and is imlpicitly normalized"""
+        """cached sum of all pdf values; the pdf need not sum to one, and is implicitly normalized"""
         return self.cdf[-1]
     def __call__(self, N):
         """draw """
@@ -626,7 +628,8 @@ def AtmosphericDepth(Height):
     
     Returns
     ---------- 
-    AtmDep: The equivilent atmospheric depth input atmospheric height [g cm^-2] - float, can be ndarray if input is ndarray.
+    AtmDep: The equivilent atmospheric depth input atmospheric height [g cm^-2] - float, can be ndarray if input is
+    ndarray.
     """
     AtmDep = ((Po*np.exp(-Height/H))/(10 * g))
     return AtmDep
@@ -641,31 +644,37 @@ def Height(AtmDep):
     
     Returns
     ---------- 
-    Height: The equivilent height in meters of the input atmospheric depth [m] - float, can be ndarray if input is ndarray.
+    Height: The equivilent height in meters of the input atmospheric depth [m] - float, can be ndarray if input is
+    ndarray.
     """
     Height = (-H*np.log((AtmDep*10*g)/(Po)))
     return Height
 
 def Greisen_Formula(Xshower, Tmax):
     """
-    This function defines the Greisen Formula for the calculation of particle number in a shower at some atmospheric depth.
+    This function defines the Greisen Formula for the calculation of particle number in a shower at some atmospheric
+    depth.
 
     Parameters
     ----------
-    Xshower: Shower depth at which you want to calculate the number of shower particles [g cm^-2] - float, can be ndarray.
+    Xshower: Shower depth at which you want to calculate the number of shower particles [g cm^-2] - float, can be
+    ndarray.
 
     Returns
     ----------
-    Ne: The number of true particles in the shower at an atmospheric depth correspinding to Xshower [-] - int, can be ndarray if input is ndarray.
+    Ne: The number of true particles in the shower at an atmospheric depth correspinding to Xshower [-] - int, can be
+    ndarray if input is ndarray.
     """
     T = Xshower / Xo # Slant depth
     s = ( (3 * T) / (T + (2 * Tmax)) ) # Shower age
     Ne = ( 0.31 / np.sqrt(Tmax) ) * np.exp(T) * (s**((-3*T)/2))
     return Ne
 
-def shower_parameterisation(E, h_init, scale):
+def shower_parameterisation(E, h_init):
     """
-    A function that converts initial energy to Joules and finds the slant depth of shower maximum, the depth of first interaction, the depth of sea level and finds the distance in atmospheric depth between the height of first interaction and ground level.
+    A function that converts initial energy to Joules and finds the slant depth of shower maximum, the depth of first
+    interaction, the depth of sea level and finds the distance in atmospheric depth between the height of first
+    interaction and ground level.
 
     Parameters
     ----------
@@ -688,34 +697,37 @@ def shower_parameterisation(E, h_init, scale):
     Xdist = int(Xasl - XFI)
     return E_J, Tmax, XFI, Xasl, Xdist
 
-def Greisen_Distribution(E_J, Tmax, Xdist, scale): # Edited input names to be more clear 10/9/18
+def Greisen_Distribution(Tmax, Xdist, scale):
     """
-    This function calculates the shape of the Greisen function for an air shower of the user specified initial energy and first interaction height.
+    This function calculates the shape of the Greisen function for an air shower of the user specified initial energy
+    and first interaction height.
 
     Parameters
     ----------
-    E_J: The initial energy in Joules [J] - float
     Tmax: The slant depth of shower maximum [none] - float
     Xdist: The distance between the height of first interaction and the observation height [g cm^-2] - float
-    scale: Step size of function, effectively shower resoltion [none] - int
+    scale: Step size of function, effectively shower resolution [none] - int
 
     Returns
     ----------
-    X: A range of depth values from the observation height to first interaction height with a spacing equal to the scale [g cm^-2] - array
-    Ntot: The total number of 'particles' in the shower simulation at this resolution [none] - int
-    Value: The value of the array argument of X that contains the maximum number of shower particles (shower maximum) [none] - int
+    x: A range of depth values from the observation height to first interaction height with a spacing equal to the
+    scale [g cm^-2] - array
+    n_tot: The total number of 'particles' in the shower simulation at this resolution [none] - int
+    value: The value of the array argument of X that contains the maximum number of shower
+    particles (shower maximum) [none] - int
     """
-    #param = shower_parameterisation(E, h_init, scale)
-    Xtop = int(Xdist + scale)
-    X = np.arange(0, Xtop, scale) # Changed from range to np.arange to remove loop 9/10/18
-    N = Greisen_Formula(X, Tmax)
-    Ntot = int(sum(N))
-    value = np.argmax(N)
-    return X, Ntot, value
+
+    x_top = int(Xdist)
+    x = np.arange(0, x_top, scale)
+    n = Greisen_Formula(x, Tmax)
+    n_tot = int(sum(n))
+    value = np.argmax(n)
+    return x, n_tot, value
 
 def Greisen_Profile_alongz(E, h_init, scale):
     """
-    Constructs an array of randomly generated x, y and z coordinates for shower 'particles' folling a Greisen function profile in length, and a gaussian scaled by the Moliere radius in width.
+    Constructs an array of randomly generated x, y and z coordinates for shower 'particles' folling a Greisen function
+    profile in length, and a gaussian scaled by the Moliere radius in width.
 
     Parameters
     ----------
@@ -727,28 +739,24 @@ def Greisen_Profile_alongz(E, h_init, scale):
     -------
     Numpy array (3,n) - positions of particles in shower
     """
-    param = shower_parameterisation(E, h_init, scale)
+    param = shower_parameterisation(E, h_init)
     E_J = param[0]
     Tmax = param[1]
     XFI = param[2]
     Xdist = param[4]
-    Greisen = Greisen_Distribution(E_J, Tmax, Xdist, scale)
+    Greisen = Greisen_Distribution(Tmax, Xdist, scale)
     X = Greisen[0]
     value = Greisen[2]
     Ntot = Greisen[1]
     Xmax = X[value]
     ShMax = Height(Xmax)
-    x = np.linspace(0, Xdist, Xdist)   # This and following 3 lines added 7/8/18
+    x = np.linspace(0, Xdist, Xdist)
     pdf = ( 0.31 / np.sqrt(Tmax) ) * np.exp((x / Xo)) * ((( (3 * (x / Xo)) / ((x / Xo) + (2 * Tmax)) ))**((-3*(x / Xo))/2))
     dist = Distribution(pdf)
     z3 = dist(Ntot)
     z2 = np.squeeze(z3)
-    #print('This is z2:', z2) # test
-    #print(type(z2)) # test
-    z1 = z2 + XFI # Line added to remove loop 11/9/18
-    #print('This is z1:', z1) # test
-    #print(type(z1)) # test
-    z = Height(z1) # Line added to remove loop 11/9/18
+    z1 = z2 + XFI
+    z = Height(z1)
     shower_center = [0, 0, ShMax]
     x = np.random.normal(loc=shower_center[0], scale=((2*Rm_0)/1.64485362692), size=Ntot)
     y = np.random.normal(loc=shower_center[1], scale=((2*Rm_0)/1.64485362692), size=Ntot)
@@ -760,7 +768,8 @@ def Greisen_Profile_alongz(E, h_init, scale):
 
 def Greisen_Profile(E, h_init, scale, alt, az, impact_point):
     """
-    n random points following gaussian lateral and Greisen function longitudinal distributions. Shower originates from direction (alt, az) and goes through impact point.
+    n random points following gaussian lateral and Greisen function longitudinal distributions. Shower originates from
+    direction (alt, az) and goes through impact point.
 
     Parameters
     ----------
@@ -778,7 +787,6 @@ def Greisen_Profile(E, h_init, scale, alt, az, impact_point):
     shower = Greisen_Profile_alongz(E, h_init, scale)
     return shower_array_rot(shower, alt, az) + np.array(impact_point)
 
-### End of New Profile Functions - merged from sky_profiles 28/8/18 ###
 
 def shifted_ellipsoide_v1(shower_center, shower_length, shower_width, n, p, origin_altitude):
     """
@@ -881,20 +889,6 @@ def random_ellipsoide(shower_top_altitude, shower_length, shower_width, alt, az,
     shower = random_ellipsoide_alongz(shower_center, shower_length, shower_width, n)
     return shower_array_rot(shower, alt, az) + np.array(impact_point)
 
-
-"""
-## THE FOLLOWING IS FOR TEST PURPOSES ONLY 18,19/4/18; 30/07/18 ##
-shower = shower()
-shower.energy_primary = 3e11
-#shower.number_of_particles = int(1e4)
-shower.height_of_first_interaction = 25000
-shower.scale = 100
-#shower.scaled_ellipsoide()
-#shower.particles_in_bins()
-shower.scaled_ellipsoide()
-Q = shower.particles
-print(Q)
-"""
 
 
 

@@ -19,6 +19,7 @@ def plot_shower3d(shower, alltel, **options):
         - display = True: show the plot. False by default
         - outfile = "file.eps" : save the plot as `file.eps`. False by default.
     """
+
     if options.get("figsize"):
         figsize = options.get("figsize")
     else:
