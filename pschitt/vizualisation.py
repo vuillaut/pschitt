@@ -146,7 +146,7 @@ def display_pointing_array(alltel):
     plt.show()
 
 
-def plot_array(telescope_array, ax=None, **kwargs):
+def plot_array(telescope_array, ax=None, display_tel_id=True, **kwargs):
     """
     Plot a map of the telescopes array
 
@@ -167,8 +167,9 @@ def plot_array(telescope_array, ax=None, **kwargs):
                **kwargs,
                )
 
-    for tel in telescope_array:
-        ax.annotate(str(tel.id), (tel.mirror_center[0] + 20, tel.mirror_center[1] + 20))
+    if display_tel_id:
+        for tel in telescope_array:
+            ax.annotate(str(tel.id), (tel.mirror_center[0] + 20, tel.mirror_center[1] + 20))
 
     ax.axis('equal')
     ax.set_xlabel("x [m]")
