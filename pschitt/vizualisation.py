@@ -146,7 +146,7 @@ def display_pointing_array(alltel):
     plt.show()
 
 
-def plot_array(telescope_array, ax=None, **kwargs):
+def plot_array(telescope_array, ax=None, display_tel_id=True, **kwargs):
     """
     Plot a map of the telescopes array
 
@@ -158,16 +158,19 @@ def plot_array(telescope_array, ax=None, **kwargs):
     ax = plt.gca() if ax is None else ax
 
     colors = ['#8dd3c7', '#fb8072', '#ffffb3', '#bebada', '#80b1d3', '#fdb462', '#b3de69']
+    camera_types = list(set([tel.camera_type for tel in telescope_array]))
     if 'c' not in kwargs and 'color' not in kwargs:
-        change_color = True
-    else:
-        change_color = False
+        kwargs['c'] = [colors[camera_types.index(tel.camera_type)] for tel in telescope_array]
 
-    for tel in telescope_array:
-        if change_color:
-            kwargs['color'] = colors[int(tel.camera_type)]
-        ax.scatter(tel.mirror_center[0], tel.mirror_center[1], **kwargs)
-        ax.annotate(str(tel.id), (tel.mirror_center[0] + 20, tel.mirror_center[1] + 20))
+    ax.scatter([tel.mirror_center[0] for tel in telescope_array],
+               [tel.mirror_center[1] for tel in telescope_array],
+               **kwargs,
+               )
+
+    if display_tel_id:
+        for tel in telescope_array:
+            ax.annotate(str(tel.id), (tel.mirror_center[0] + 20, tel.mirror_center[1] + 20))
+
     ax.axis('equal')
     ax.set_xlabel("x [m]")
     ax.set_ylabel("y [m]")
